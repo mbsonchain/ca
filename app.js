@@ -1,5 +1,5 @@
 import { places } from './places.js';
-import { archiveItems, collectionCopy } from './archive.js';
+import { collectionCopy } from './collection.js';
 
 const main = document.querySelector('#main');
 const bySlug = new Map(places.map(place => [place.slug, place]));
@@ -9,14 +9,15 @@ const mapImage = '/assets/conamore-map.png';
 let cleanup = () => {};
 let labelsVisible = false;
 
-function bar(title, back = '/', backText = '← home', extra = '') {
-  return `<header class="page-bar"><a href="${back}">${backText}</a><h1>${title}</h1><div>${extra}</div></header>`;
+function bar() {
+  return `<header class="page-bar"><nav aria-label="Site navigation"><a href="/">home</a><a href="https://desertformal.com">formal</a><a href="https://strikeout.us">strikeout</a></nav></header>`;
 }
 
 function render({ focus = false } = {}) {
   cleanup();
   cleanup = () => {};
   const path = location.pathname.replace(/\/$/, '') || '/';
+  document.body.classList.toggle('fixed-map-page', path === '/' || path === '/travel-guide');
   let section = '';
   if (path === '/') {
     document.title = 'Conamore';
@@ -24,15 +25,15 @@ function render({ focus = false } = {}) {
   } else if (path === '/travel-guide') {
     section = 'guide';
     document.title = 'Travel guide — Conamore';
-    main.innerHTML = `${bar('travel guide', '/', '← home', '<a href="/old-map">old map ↗</a>')}
+    main.innerHTML = `${bar()}<div class="guide-page"><h1 class="sr-only">travel guide</h1>
       <section class="map-stage" aria-label="Explore the places of Conamore">
         <div class="map-canvas">
           <img class="map-image" src="${labelsVisible ? '/assets/conamore-map-labelled.png' : mapImage}" width="1024" height="1536" alt="Conamore travel map. Hover, focus or tap a location to find out more.">
           ${places.map(p => `<button class="hotspot${p.area ? ' area' : ''}" style="--x:${p.x / 1024 * 100}%;--y:${p.y / 1536 * 100}%" data-place="${p.slug}" aria-label="${escape(p.name)}" aria-expanded="false" aria-controls="place-card"></button>`).join('')}
         </div>
       </section>
-      <div class="guide-tools"><button id="labels" aria-pressed="${labelsVisible}">${labelsVisible ? 'hide' : 'show'} names</button><button id="index-toggle" aria-expanded="false" aria-controls="places-index">all places ↓</button></div>
-      <section id="places-index" class="places-index" hidden><nav aria-label="All places">${places.map(p => `<a href="${placeUrl(p)}">${escape(p.name)}</a>`).join('')}</nav></section>`;
+      <div class="guide-tools"><button id="labels" aria-pressed="${labelsVisible}">${labelsVisible ? 'hide' : 'show'} names</button><button id="index-toggle" aria-haspopup="dialog" aria-expanded="false" aria-controls="places-index">all places</button></div></div>
+      <dialog id="places-index" class="places-index" aria-labelledby="places-index-title"><div class="index-heading"><h2 id="places-index-title">all places</h2><button id="index-close" aria-label="Close place list">×</button></div><nav aria-label="All places">${places.map(p => `<a href="${placeUrl(p)}">${escape(p.name)}</a>`).join('')}</nav></dialog>`;
     document.querySelector('#labels').addEventListener('click', event => {
       labelsVisible = !labelsVisible;
       event.currentTarget.setAttribute('aria-pressed', String(labelsVisible));
@@ -41,11 +42,16 @@ function render({ focus = false } = {}) {
     });
     document.querySelector('#index-toggle').addEventListener('click', event => {
       const index = document.querySelector('#places-index');
-      index.hidden = !index.hidden;
-      event.currentTarget.setAttribute('aria-expanded', String(!index.hidden));
-      event.currentTarget.textContent = index.hidden ? 'all places ↓' : 'close list ↑';
-      if (!index.hidden) index.scrollIntoView({ behavior: 'auto', block: 'center' });
+      index.showModal();
+      event.currentTarget.setAttribute('aria-expanded', 'true');
     });
+    const index = document.querySelector('#places-index');
+    document.querySelector('#index-close').addEventListener('click', () => index.close());
+    index.addEventListener('close', () => document.querySelector('#index-toggle')?.setAttribute('aria-expanded', 'false'));
+    index.addEventListener('click', event => { if (event.target === index) {
+      const rect = index.getBoundingClientRect();
+      if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) index.close();
+    } });
     setupCards(button => {
       const p = bySlug.get(button.dataset.place);
       return { title: p.name, intro: p.intro, eyebrow: p.region, url: placeUrl(p), link: 'explore this place →' };
@@ -54,7 +60,7 @@ function render({ focus = false } = {}) {
     section = 'guide';
     const place = bySlug.get(path.split('/')[2]);
     document.title = `${place.name} — Conamore`;
-    main.innerHTML = `${bar('travel guide', '/travel-guide', '← map')}
+    main.innerHTML = `${bar()}<a class="map-back" href="/travel-guide">← travel guide</a>
       <article class="detail">
         <div class="map-crop" style="--crop-x:${place.x / 1024 * 100}%;--crop-y:${place.y / 1536 * 100}%"><img src="${mapImage}" width="1024" height="1536" alt="${escape(place.name)} and its surroundings on the Conamore map"></div>
         <div class="detail-copy"><p class="eyebrow">${escape(place.region)}</p><h1>${escape(place.name)}</h1><p>${escape(place.detail)}</p>
@@ -64,24 +70,12 @@ function render({ focus = false } = {}) {
   } else if (path === '/visit-conamore') {
     section = 'collection';
     document.title = 'Visit Conamore — the collection';
-    main.innerHTML = `${bar('visit conamore')}<article class="collection"><h1>CONAMORE</h1>
+    main.innerHTML = `${bar()}<article class="collection"><h1><img class="collection-logo" src="/assets/conamore-collection-logo.png" width="612" height="160" alt="CONAMORE"></h1>
       ${collectionCopy.split('\n\n').map((p, i) => `<p${i === 0 ? ' class="collection-intro"' : ''}>${escape(p)}</p>`).join('')}
-      <a href="/old-map" aria-label="Explore the original Conamore map"><img src="/assets/conamore-original.jpg" width="2500" height="1407" alt="The original Conamore map: pink drawings and a winding path around the collection." loading="lazy"></a><a class="archive-link" href="/old-map">the original map ↗</a></article>`;
-  } else if (path === '/old-map') {
-    section = 'guide';
-    document.title = 'The original map — Conamore';
-    main.innerHTML = `${bar('the original map', '/travel-guide', '← travel guide')}
-      <section class="archive-stage" aria-label="The original Conamore map"><div class="archive-canvas">
-        <img src="/assets/conamore-original.jpg" width="2500" height="1407" alt="Conamore’s original hand-drawn map, with the collection’s original hover captions.">
-        ${archiveItems.map((item, index) => `<button class="hotspot" data-archive="${index}" style="--x:${item.position_x}%;--y:${item.position_y}%;--width:${item.hotspot_width / 12.5}%;--height:${item.hotspot_height / 7.035}%" aria-label="${escape(item.title)}" aria-expanded="false" aria-controls="place-card"></button>`).join('')}
-      </div></section>`;
-    setupCards(button => {
-      const item = archiveItems[Number(button.dataset.archive)];
-      return { title: item.title.length < 70 ? item.title : 'CONAMORE', intro: item.title.length < 70 ? item.description : item.title, eyebrow: 'from the original map' };
-    });
+      </article>`;
   } else {
     document.title = 'Not found — Conamore';
-    main.innerHTML = `${bar('conamore')}<section class="not-found"><h1>off the map.</h1><p><a href="/travel-guide">back to the travel guide →</a></p></section>`;
+    main.innerHTML = `${bar()}<section class="not-found"><h1>off the map.</h1><p><a href="/travel-guide">back to the travel guide →</a></p></section>`;
   }
   document.querySelectorAll('[data-nav]').forEach(a => {
     if (a.dataset.nav === section) a.setAttribute('aria-current', 'page');
