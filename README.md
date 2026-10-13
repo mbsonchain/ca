@@ -1,8 +1,8 @@
 # Visit Conamore
 
-First map-based preview for visitconamore.com. Static HTML, CSS and JavaScript; no dependencies or backend.
+Map-based site for visitconamore.com. Static HTML, CSS and JavaScript; no dependencies or backend.
 
-- `/`: supplied blank map, CONAMORE in the existing Strikeout Articulat CF font at weight 900, and Courier navigation.
+- `/`: supplied blank map, CONAMORE in Articulat Heavy CF at weight 900 with tight spacing, and Courier navigation.
 - `/travel-guide`: all 22 names from the supplied reference mapped to the artwork. Mouse hover and keyboard focus reveal square previews. Mouse clicks open place pages; touch opens the preview first. Escape and the close control dismiss previews. Includes a names toggle and an accessible place index.
 - `/travel-guide/<place>`: direct-linkable place pages with a map detail, geographic description and onward links.
 - `/visit-conamore`: the existing collection copy, preserved verbatim from the original theme.
@@ -24,10 +24,10 @@ Assets:
 - `conamore-map-labelled.png`: supplied `map with text.png`, copied without modification.
 - `conamore-original.jpg`: original `SOS_site.jpg` from the store's public CDN, copied without modification.
 
-The existing Adobe Fonts kit is used for the title. Footer and small interface text use Courier New/Courier, matching the current website interface. No fonts were downloaded or redistributed.
+The existing Adobe Fonts kit is used for the title. The kit registers the real 900 face under the separate `articulat-heavy-cf` family; CONAMORE uses that face on the home and collection pages. Footer and small interface text use Courier New/Courier, matching the current website interface. No font binaries are redistributed.
 
-## Preview status
+## Release and verification
 
-Work is on `codex/conamore-map`, following the existing preview-before-main review process. The live branch has not been modified. No Shopify data, credentials, theme backups or private store exports are included.
+The user authorized the first production release on 14 October 2026, including the heavier CONAMORE title. Production deploys from `main` through the existing Vercel integration. No Shopify data, credentials, theme backups or private store exports are included.
 
-Syntax validation and static output/link checks pass. Browser QA was blocked because the browser could not verify its admin-enforced security policy. Visual appearance and touch interaction still need a browser review. No production deployment is claimed.
+Syntax validation and static output/link checks pass. Initial browser QA was blocked because the browser could not verify its admin-enforced security policy. Visual appearance and touch interaction still need a browser review.
