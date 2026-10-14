@@ -33,11 +33,23 @@ main:focus { outline: 0; }
 .page-bar a { min-height: 44px; display: inline-flex; align-items: center; padding: 10px 0; justify-self: start; }
 .page-bar a:nth-child(2) { justify-self: center; }
 .page-bar a:last-child { justify-self: end; }
-.guide-page { position: relative; height: calc(100svh - var(--header-height) - var(--footer-height)); display: grid; grid-template-rows: minmax(0, 1fr); padding: 8px var(--map-gutter); }
+.guide-page { --guide-map-width: min(calc((100svh - var(--header-height) - var(--footer-height) - 16px) * 2 / 3), calc(100vw - 2 * var(--map-gutter))); position: relative; height: calc(100svh - var(--header-height) - var(--footer-height)); display: grid; grid-template-rows: minmax(0, 1fr); padding: 8px var(--map-gutter); }
 .guide-background { position: absolute; inset: 0; width: 100%; height: 100%; }
 .guide-background:focus-visible { outline-offset: -8px; }
 .map-stage { position: relative; min-height: 0; display: grid; place-items: center; pointer-events: none; }
-.map-canvas { position: relative; width: min(calc((100svh - var(--header-height) - var(--footer-height) - 16px) * 2 / 3), calc(100vw - 2 * var(--map-gutter))); aspect-ratio: 2 / 3; }
+.map-canvas { position: relative; width: var(--guide-map-width); aspect-ratio: 2 / 3; }
+.guide-flowers { display: none; pointer-events: none; }
+@media (min-width: 900px) {
+  .guide-flowers { position: absolute; inset: 8px var(--map-gutter); display: grid; grid-template-columns: minmax(0, 1fr) var(--guide-map-width) minmax(0, 1fr); }
+  .guide-flower-side { position: relative; min-width: 0; }
+  .guide-flower-side--left { grid-column: 1; }
+  .guide-flower-side--right { grid-column: 3; }
+  .guide-flower { position: absolute; height: auto; max-width: 60%; transform: translate(-50%, -50%); filter: url(#flower-soft-ink); user-select: none; }
+  .guide-flower--one { width: clamp(90px, 10.5vw, 152px); left: 40%; top: 23%; }
+  .guide-flower--two { width: clamp(58px, 6.4vw, 92px); left: 58%; top: 74%; }
+  .guide-flower--three { width: clamp(62px, 7vw, 100px); left: 43%; top: 20%; }
+  .guide-flower--four { width: clamp(96px, 11.5vw, 166px); left: 63%; top: 71%; }
+}
 .map-image { width: 100%; height: 100%; object-fit: fill; pointer-events: auto; }
 .map-labels { position: absolute; inset: 0; pointer-events: none; }
 .map-label { position: absolute; transform: translateY(-50%); font-size: clamp(9px, 1.2vw, 12px); line-height: 1.05; color: #07144b; white-space: nowrap; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }

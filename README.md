@@ -7,6 +7,9 @@ Map-based site for visitconamore.com. Static HTML, CSS and JavaScript; no depend
 - `/travel-guide/<place>`: direct-linkable place pages with a map detail, geographic description and onward links.
 - `/visit-conamore`: the existing collection copy, preserved verbatim from the original theme, under the same heavy CONAMORE wordmark as home. The wordmark links home. Content fits one screen, adjusting type and spacing to the available height; short screens use two text columns.
 - `/mobile-preview`: 390 × 844 preview frame.
+- `/desktop-preview`: interactive 1440 × 900 desktop preview scaled to fit the browser panel.
+
+Desktop flowers: four copies of Matteo's pink flower sit in the guide's side margins at widths of 900px and above, with varied sizes and spacing inspired by his flower pattern. They are decorative and ignore pointer events, preserving map navigation and background name toggling. The map's size and center are unchanged. `assets/conamore-flower.png` is copied unchanged from the supplied `Desktop/desert formal/flower.png` (583 × 618, transparent PNG). A dedicated display filter lifts the dark outlines to soft charcoal, preserving the light pink/yellow colors and original transparency.
 
 Home and travel guide use the same available map area and aspect ratio at every breakpoint, so navigation does not change the map's scale or center. The mobile homepage wordmark is centered vertically over that map area. Every entry to the guide starts with names hidden. Above 640px wide, Freetown's label sits 9px higher and Goldpoint's 9px lower; their dots and mobile label positions are unchanged.
 

@@ -4,7 +4,7 @@ import { places } from '../places.js';
 // Rebuild generated output from scratch so removed pages and assets cannot ship.
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist/travel-guide', { recursive: true });
-for (const file of ['index.html', 'app.js', 'places.js', 'collection.js', 'map-labels.js', 'place-cards.js', 'styles.css', 'mobile-preview.html']) await copyFile(file, `dist/${file}`);
+for (const file of ['index.html', 'app.js', 'places.js', 'collection.js', 'map-labels.js', 'place-cards.js', 'styles.css', 'mobile-preview.html', 'desktop-preview.html']) await copyFile(file, `dist/${file}`);
 await cp('assets', 'dist/assets', { recursive: true });
 const html = await readFile('index.html', 'utf8');
 const pages = [
