@@ -12,13 +12,13 @@ let labelsVisible = false;
 
 function mapLabel(place) {
   const left = ['orangepoint', 'freetown', 'open-city'].includes(place.slug);
-  const name = ['freetown-formal', 'sunset-cliffs'].includes(place.slug) ? escape(place.name).replace(' ', '<br>') : escape(place.name);
-  const drop = place.slug === 'laketown' ? 6 : 0;
+  const name = ['freetown-formal', 'island-formal', 'sunset-cliffs'].includes(place.slug) ? escape(place.name).replace(' ', '<br>') : escape(place.name);
+  const drop = { laketown: 6, santamore: 9, orangepoint: -9 }[place.slug] || 0;
   return `<span class="map-label" data-x="${place.x}" data-side="${left ? 'left' : 'right'}" style="top:calc(${place.y / 1536 * 100}% + ${drop}px)">${name}</span>`;
 }
 
-function bar() {
-  return `<header class="page-bar"><nav aria-label="Site navigation"><a href="/">home</a><a href="https://desertformal.com">formal</a><a href="https://strikeout.us">strikeout</a></nav></header>`;
+function bar({ home = false } = {}) {
+  return `<header class="page-bar${home ? ' home-bar' : ''}"><nav aria-label="Site navigation"><a href="/"${home ? ' aria-current="page"' : ''}>home</a><a href="https://desertformal.com">formal</a><a href="https://strikeout.us">strikeout</a></nav></header>`;
 }
 
 function render({ focus = false } = {}) {
@@ -29,7 +29,7 @@ function render({ focus = false } = {}) {
   let section = '';
   if (path === '/') {
     document.title = 'Conamore';
-    main.innerHTML = `<section class="home"><a class="home-map-link" href="/travel-guide" aria-label="Explore the Conamore travel guide"><img class="home-map" src="${mapImage}" width="1024" height="1536" alt="The map of Conamore, with green hills, mountain roads, blue lakes and a golden desert." fetchpriority="high"></a><h1 class="wordmark"><a href="/travel-guide">CONAMORE</a></h1></section>`;
+    main.innerHTML = `${bar({ home: true })}<section class="home"><a class="home-map-link" href="/travel-guide" aria-label="Explore the Conamore travel guide"><img class="home-map" src="${mapImage}" width="1024" height="1536" alt="The map of Conamore, with green hills, mountain roads, blue lakes and a golden desert." fetchpriority="high"></a><h1 class="wordmark"><a href="/travel-guide">CONAMORE</a></h1></section>`;
   } else if (path === '/travel-guide') {
     section = 'guide';
     document.title = 'Travel guide — Conamore';
