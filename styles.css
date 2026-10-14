@@ -1,4 +1,4 @@
-:root { --ink: #080808; --pink: #e991c7; --mono: 'Courier New', Courier, monospace; --sans: articulat-cf, Arial, Helvetica, sans-serif; --header-height: 72px; --footer-height: 83px; color: var(--ink); background: #fff; font: 12px/1.6 var(--mono); color-scheme: light; font-synthesis: weight; }
+:root { --ink: #080808; --pink: #e991c7; --mono: 'Courier New', Courier, monospace; --sans: articulat-cf, Arial, Helvetica, sans-serif; --header-height: 72px; --footer-height: 83px; --map-gutter: 16px; color: var(--ink); background: #fff; font: 12px/1.6 var(--mono); color-scheme: light; font-synthesis: weight; }
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 280px; background: #fff; }
 body.fixed-map-page { height: 100svh; overflow: hidden; }
@@ -18,7 +18,7 @@ main:focus { outline: 0; }
 .skip-link { position: fixed; left: 20px; top: -100px; z-index: 100; padding: 10px; background: white; }
 .skip-link:focus { top: 10px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.home { height: 100svh; min-height: 0; display: grid; place-items: center; padding: calc(var(--header-height) + 8px) 16px calc(var(--footer-height) + 8px); position: relative; }
+.home { height: 100svh; min-height: 0; display: grid; place-items: center; padding: calc(var(--header-height) + 8px) var(--map-gutter) calc(var(--footer-height) + 8px); position: relative; }
 .home-map-link { display: block; width: 100%; height: 100%; min-height: 0; }
 .home-map { height: 100%; width: 100%; object-fit: contain; min-height: 0; }
 .wordmark { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); width: 100%; text-align: center; font: 900 clamp(46px, 12.2vw, 210px)/1 'articulat-heavy-cf', var(--sans); letter-spacing: -.045em; padding-right: .045em; white-space: nowrap; pointer-events: none; }
@@ -33,11 +33,11 @@ main:focus { outline: 0; }
 .page-bar a { min-height: 44px; display: inline-flex; align-items: center; padding: 10px 0; justify-self: start; }
 .page-bar a:nth-child(2) { justify-self: center; }
 .page-bar a:last-child { justify-self: end; }
-.guide-page { position: relative; height: calc(100svh - var(--header-height) - var(--footer-height)); display: grid; grid-template-rows: minmax(0, 1fr); padding: 12px 20px; }
+.guide-page { position: relative; height: calc(100svh - var(--header-height) - var(--footer-height)); display: grid; grid-template-rows: minmax(0, 1fr); padding: 8px var(--map-gutter); }
 .guide-background { position: absolute; inset: 0; width: 100%; height: 100%; }
 .guide-background:focus-visible { outline-offset: -8px; }
 .map-stage { position: relative; min-height: 0; display: grid; place-items: center; pointer-events: none; }
-.map-canvas { position: relative; width: min(520px, calc((100svh - var(--header-height) - var(--footer-height) - 24px) * .6666667), calc(100vw - 40px)); aspect-ratio: 2 / 3; }
+.map-canvas { position: relative; width: min(calc((100svh - var(--header-height) - var(--footer-height) - 16px) * 2 / 3), calc(100vw - 2 * var(--map-gutter))); aspect-ratio: 2 / 3; }
 .map-image { width: 100%; height: 100%; object-fit: fill; pointer-events: auto; }
 .map-labels { position: absolute; inset: 0; pointer-events: none; }
 .map-label { position: absolute; transform: translateY(-50%); font-size: clamp(9px, 1.2vw, 12px); line-height: 1.05; color: #07144b; white-space: nowrap; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
@@ -76,12 +76,9 @@ main:focus { outline: 0; }
 .collection .collection-intro { font: 900 calc(18px * var(--collection-fit))/1.4 var(--sans); margin-bottom: calc(20px * var(--collection-fit)); }
 .no-script, .not-found { padding: 120px 30px; text-align: center; }
 @media (max-width: 640px) {
-  :root { --header-height: 64px; --footer-height: 76px; }
-  .home { padding-left: 5px; padding-right: 5px; }
+  :root { --header-height: 64px; --footer-height: 76px; --map-gutter: 5px; }
   .wordmark { font-size: 12.1vw; top: 43%; }
   .page-bar { padding: 0 20px; font-size: 11px; }
-  .guide-page { padding: 12px 16px; }
-  .map-canvas { width: min(calc((100svh - var(--header-height) - var(--footer-height) - 24px) * .6666667), calc(100vw - 32px)); }
   .hotspot { width: 30px; height: 30px; }
   .site-footer { font-size: 11px; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
   .place-card { width: 218px; min-height: 218px; padding: 20px; }
@@ -98,11 +95,8 @@ main:focus { outline: 0; }
   .collection .collection-intro { font-size: calc(15px * var(--collection-fit)); margin-bottom: calc(16px * var(--collection-fit)); }
 }
 @media (max-height: 500px) {
-  :root { --header-height: 48px; --footer-height: 52px; }
-  .home { padding-left: 16px; padding-right: 16px; }
+  :root { --header-height: 48px; --footer-height: 52px; --map-gutter: 16px; }
   .site-footer { padding: 0 20px; }
-  .guide-page { padding: 6px 20px; }
-  .map-canvas { width: min(520px, calc((100svh - var(--header-height) - var(--footer-height) - 12px) * .6666667), calc(100vw - 40px)); }
   .wordmark { font-size: min(12.1vw, 25svh); }
   .collection { padding: 8px 24px; }
   .collection-content { width: min(100%, 1040px); gap: calc(8px * var(--collection-fit)); }

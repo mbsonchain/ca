@@ -8,7 +8,6 @@ const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<'
 const placeUrl = place => `/travel-guide/${place.slug}`;
 const mapImage = '/assets/conamore-map.png';
 let cleanup = () => {};
-let labelsVisible = false;
 
 function mapLabel(place) {
   const left = ['orangepoint', 'freetown', 'open-city'].includes(place.slug);
@@ -34,7 +33,7 @@ function render({ focus = false } = {}) {
     section = 'guide';
     document.title = 'Travel guide — Conamore';
     main.innerHTML = `${bar()}<div class="guide-page"><h1 class="sr-only">travel guide</h1>
-      <button class="guide-background" aria-label="Show place names" aria-pressed="${labelsVisible}" aria-controls="map-labels"></button>
+      <button class="guide-background" aria-label="Show place names" aria-pressed="false" aria-controls="map-labels"></button>
       <section class="map-stage" aria-label="Explore the places of Conamore">
         <div class="map-canvas">
           <img class="map-image" src="${mapImage}" width="1024" height="1536" alt="Conamore travel map. Hover, focus or tap a location to find out more.">
@@ -47,7 +46,7 @@ function render({ focus = false } = {}) {
       return { title: p.name, intro: p.intro, eyebrow: p.region, url: placeUrl(p), link: 'explore this place →' };
     });
     const cleanCards = cleanup;
-    const cleanLabels = setupMapLabels(document.querySelector('.guide-page'), { visible: labelsVisible, onChange: visible => { labelsVisible = visible; } });
+    const cleanLabels = setupMapLabels(document.querySelector('.guide-page'));
     cleanup = () => { cleanCards(); cleanLabels(); };
   } else if (path.startsWith('/travel-guide/') && bySlug.has(path.split('/')[2]) && path.split('/').length === 3) {
     section = 'guide';
