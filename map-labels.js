@@ -3,6 +3,30 @@ export function isMapPaper([red, green, blue, alpha]) {
   return alpha === 0 || (red >= 243 && green >= 243 && blue >= 243);
 }
 
+export function setupCardDismissal(card, close, root = document) {
+  const controller = new AbortController();
+  const outside = target => !card.contains(target) && !target.closest('.hotspot');
+  let dismissedOnPointerDown = false;
+  root.addEventListener('pointerdown', event => {
+    dismissedOnPointerDown = !card.hidden && outside(event.target);
+    if (dismissedOnPointerDown) close();
+  }, { signal: controller.signal });
+  root.addEventListener('pointercancel', () => { dismissedOnPointerDown = false; }, { signal: controller.signal });
+  root.addEventListener('click', event => {
+    // The card may already have closed on pointerdown, before this click reaches
+    // the background's label toggle. Consume that same gesture only.
+    const dismissing = dismissedOnPointerDown || !card.hidden;
+    dismissedOnPointerDown = false;
+    if (!dismissing || !outside(event.target)) return;
+    if (!card.hidden) close();
+    if (event.target.closest('.guide-background, .map-image')) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }, { capture: true, signal: controller.signal });
+  return () => controller.abort();
+}
+
 export function setupMapLabels(page, { visible = false, onChange = () => {} } = {}) {
   const background = page.querySelector('.guide-background');
   const map = page.querySelector('.map-image');

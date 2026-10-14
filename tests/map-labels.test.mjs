@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isMapPaper, setupMapLabels } from '../map-labels.js';
+import { isMapPaper, setupMapLabels, setupCardDismissal } from '../map-labels.js';
 
 function fixture(t, viewport = 1000) {
   const previous = Object.fromEntries(['document', 'ResizeObserver', 'innerWidth'].map(key => [key, globalThis[key]]));
@@ -78,4 +78,69 @@ test('leaving the guide removes toggle listeners and its resize observer', t => 
   f.clickMap([255, 255, 255, 255]);
   assert.deepEqual(f.changes, []);
   assert.equal(f.disconnected(), true);
+});
+
+function dismissalFixture(t) {
+  const root = new EventTarget();
+  const targets = Object.fromEntries(['background', 'map', 'hotspot', 'card', 'link'].map(kind => [kind, {
+    kind,
+    closest(selector) {
+      if (selector === '.hotspot') return kind === 'hotspot' ? this : null;
+      if (selector === '.guide-background, .map-image') return ['background', 'map'].includes(kind) ? this : null;
+      return null;
+    },
+  }]));
+  const card = { hidden: false, contains: target => target.kind === 'card' };
+  const dispose = setupCardDismissal(card, () => { card.hidden = true; }, root);
+  t.after(dispose);
+  function fire(type, kind, pointerType = 'mouse') {
+    const event = new Event(type, { cancelable: true });
+    Object.defineProperty(event, 'target', { value: targets[kind] });
+    Object.assign(event, { pointerType });
+    root.dispatchEvent(event);
+    return event;
+  }
+  return { card, fire, dispose };
+}
+
+test('outside mouse, touch and pen gestures dismiss cards without reaching either names toggle', t => {
+  const f = dismissalFixture(t);
+  for (const pointerType of ['mouse', 'touch', 'pen']) {
+    for (const target of ['background', 'map']) {
+      f.card.hidden = false;
+      f.fire('pointerdown', target, pointerType);
+      assert.equal(f.card.hidden, true);
+      assert.equal(f.fire('click', target, pointerType).defaultPrevented, true);
+      f.fire('pointerdown', target, pointerType);
+      assert.equal(f.fire('click', target, pointerType).defaultPrevented, false);
+    }
+  }
+});
+
+test('keyboard dismissal is consumed but card controls, other markers and navigation remain usable', t => {
+  const f = dismissalFixture(t);
+  assert.equal(f.fire('click', 'background').defaultPrevented, true);
+  assert.equal(f.card.hidden, true);
+  assert.equal(f.fire('click', 'background').defaultPrevented, false);
+  for (const target of ['card', 'hotspot']) {
+    f.card.hidden = false;
+    f.fire('pointerdown', target);
+    assert.equal(f.fire('click', target).defaultPrevented, false);
+    assert.equal(f.card.hidden, false);
+  }
+  f.fire('pointerdown', 'link');
+  assert.equal(f.fire('click', 'link').defaultPrevented, false);
+  assert.equal(f.card.hidden, true);
+});
+
+test('cancelled gestures and leaving the page clear dismissal interception', t => {
+  const f = dismissalFixture(t);
+  f.fire('pointerdown', 'background');
+  f.fire('pointercancel', 'background');
+  assert.equal(f.fire('click', 'background').defaultPrevented, false);
+  f.card.hidden = false;
+  f.dispose();
+  f.fire('pointerdown', 'background');
+  assert.equal(f.fire('click', 'background').defaultPrevented, false);
+  assert.equal(f.card.hidden, false);
 });

@@ -10,6 +10,8 @@ Map-based site for visitconamore.com. Static HTML, CSS and JavaScript; no depend
 
 Home and travel guide use the same available map area and aspect ratio at every breakpoint, so navigation does not change the map's scale or center. The mobile homepage wordmark is centered vertically over that map area. Every entry to the guide starts with names hidden. Above 640px wide, Freetown's label sits 9px higher and Goldpoint's 9px lower; their dots and mobile label positions are unchanged.
 
+Clicking outside an open location card dismisses it without changing name visibility. A subsequent white-space click toggles names normally. The dismissal guard covers mouse, touch, pen and keyboard activation, while preserving card controls, marker selection and navigation.
+
 ## Run
 
 `npm run check` validates syntax. `npm test` checks white-space toggling, pixel coordinate mapping, label bounds and cleanup. `npm run build` creates `dist/`. `npm run dev` serves the built site at http://127.0.0.1:4175.
