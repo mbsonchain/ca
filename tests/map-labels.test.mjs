@@ -109,8 +109,9 @@ test('outside mouse, touch and pen gestures dismiss cards without reaching eithe
     for (const target of ['background', 'map']) {
       f.card.hidden = false;
       f.fire('pointerdown', target, pointerType);
-      assert.equal(f.card.hidden, true);
+      assert.equal(f.card.hidden, false);
       assert.equal(f.fire('click', target, pointerType).defaultPrevented, true);
+      assert.equal(f.card.hidden, true);
       f.fire('pointerdown', target, pointerType);
       assert.equal(f.fire('click', target, pointerType).defaultPrevented, false);
     }
@@ -137,6 +138,8 @@ test('cancelled gestures and leaving the page clear dismissal interception', t =
   const f = dismissalFixture(t);
   f.fire('pointerdown', 'background');
   f.fire('pointercancel', 'background');
+  assert.equal(f.card.hidden, false);
+  f.card.hidden = true;
   assert.equal(f.fire('click', 'background').defaultPrevented, false);
   f.card.hidden = false;
   f.dispose();

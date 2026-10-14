@@ -10,7 +10,7 @@ Map-based site for visitconamore.com. Static HTML, CSS and JavaScript; no depend
 
 Home and travel guide use the same available map area and aspect ratio at every breakpoint, so navigation does not change the map's scale or center. The mobile homepage wordmark is centered vertically over that map area. Every entry to the guide starts with names hidden. Above 640px wide, Freetown's label sits 9px higher and Goldpoint's 9px lower; their dots and mobile label positions are unchanged.
 
-Clicking outside an open location card dismisses it without changing name visibility. A subsequent white-space click toggles names normally. The dismissal guard covers mouse, touch, pen and keyboard activation, while preserving card controls, marker selection and navigation.
+Tapped location cards stay open after finger lift or focus changes until explicitly dismissed. Hover auto-close applies to mouse interactions. Clicking outside an open card dismisses it when the tap completes, without changing name visibility; a subsequent white-space click toggles names normally. The dismissal guard covers mouse, touch, pen and keyboard activation, while preserving card controls, marker selection and navigation. Regression checks exercise the actual card lifecycle, including unfocused touch buttons and delayed dismissal taps.
 
 ## Run
 

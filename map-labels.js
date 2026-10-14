@@ -6,17 +6,16 @@ export function isMapPaper([red, green, blue, alpha]) {
 export function setupCardDismissal(card, close, root = document) {
   const controller = new AbortController();
   const outside = target => !card.contains(target) && !target.closest('.hotspot');
-  let dismissedOnPointerDown = false;
+  let startedOutsideCard = false;
   root.addEventListener('pointerdown', event => {
-    dismissedOnPointerDown = !card.hidden && outside(event.target);
-    if (dismissedOnPointerDown) close();
-  }, { signal: controller.signal });
-  root.addEventListener('pointercancel', () => { dismissedOnPointerDown = false; }, { signal: controller.signal });
+    startedOutsideCard = !card.hidden && outside(event.target);
+  }, { capture: true, signal: controller.signal });
+  root.addEventListener('pointercancel', () => { startedOutsideCard = false; }, { signal: controller.signal });
   root.addEventListener('click', event => {
-    // The card may already have closed on pointerdown, before this click reaches
-    // the background's label toggle. Consume that same gesture only.
-    const dismissing = dismissedOnPointerDown || !card.hidden;
-    dismissedOnPointerDown = false;
+    // Keep the card in place until the tap completes, then dismiss it before
+    // the same activation can reach the background's label toggle.
+    const dismissing = startedOutsideCard || !card.hidden;
+    startedOutsideCard = false;
     if (!dismissing || !outside(event.target)) return;
     if (!card.hidden) close();
     if (event.target.closest('.guide-background, .map-image')) {
@@ -61,7 +60,8 @@ export function setupMapLabels(page, { visible = false, onChange = () => {} } = 
     background.setAttribute('aria-pressed', String(visible));
     positionLabels();
   }
-  function toggle() {
+  function toggle(event) {
+    if (event?.defaultPrevented) return;
     visible = !visible;
     update();
     onChange(visible);
@@ -69,11 +69,11 @@ export function setupMapLabels(page, { visible = false, onChange = () => {} } = 
   on(background, 'click', toggle);
   on(map, 'load', readMap);
   on(map, 'click', event => {
-    if (!pixels) return;
+    if (event.defaultPrevented || !pixels) return;
     const bounds = map.getBoundingClientRect();
     const x = Math.max(0, Math.min(map.naturalWidth - 1, Math.floor((event.clientX - bounds.left) / bounds.width * map.naturalWidth)));
     const y = Math.max(0, Math.min(map.naturalHeight - 1, Math.floor((event.clientY - bounds.top) / bounds.height * map.naturalHeight)));
-    if (isMapPaper(pixels.getImageData(x, y, 1, 1).data)) toggle();
+    if (isMapPaper(pixels.getImageData(x, y, 1, 1).data)) toggle(event);
   });
   const observer = new ResizeObserver(positionLabels);
   observer.observe(canvas);
