@@ -1,6 +1,6 @@
 import { places } from './places.js';
 import { collectionCopy } from './collection.js';
-import { setupMapLabels } from './map-labels.js';
+import { setupMapLabels, setupCardDismissal } from './map-labels.js';
 
 const main = document.querySelector('#main');
 const bySlug = new Map(places.map(place => [place.slug, place]));
@@ -196,11 +196,11 @@ function setupCards(getContent) {
   on(card, 'pointerleave', scheduleClose);
   on(card, 'focusin', cancelClose);
   on(card, 'focusout', scheduleClose);
-  on(document, 'pointerdown', event => { if (!card.contains(event.target) && !event.target.closest('.hotspot')) close(); });
+  const cleanDismissal = setupCardDismissal(card, close);
   on(document, 'keydown', event => { if (event.key === 'Escape' && !card.hidden) { event.preventDefault(); close({ restoreFocus: card.contains(document.activeElement) }); } });
   on(window, 'resize', position);
   on(window, 'scroll', position);
-  cleanup = () => { cancelClose(); controller.abort(); card.remove(); };
+  cleanup = () => { cancelClose(); cleanDismissal(); controller.abort(); card.remove(); };
 }
 
 function navigate(url) {
