@@ -77,7 +77,7 @@ main:focus { outline: 0; }
 .no-script, .not-found { padding: 120px 30px; text-align: center; }
 @media (max-width: 640px) {
   :root { --header-height: 64px; --footer-height: 76px; --map-gutter: 5px; }
-  .wordmark { font-size: 12.1vw; top: 43%; }
+  .wordmark { font-size: 12.1vw; top: calc(50% + (var(--header-height) - var(--footer-height)) / 2); }
   .page-bar { padding: 0 20px; font-size: 11px; }
   .hotspot { width: 30px; height: 30px; }
   .site-footer { font-size: 11px; padding-bottom: max(12px, env(safe-area-inset-bottom)); }

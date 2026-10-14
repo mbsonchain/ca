@@ -8,7 +8,7 @@ Map-based site for visitconamore.com. Static HTML, CSS and JavaScript; no depend
 - `/visit-conamore`: the existing collection copy, preserved verbatim from the original theme, under the same heavy CONAMORE wordmark as home. The wordmark links home. Content fits one screen, adjusting type and spacing to the available height; short screens use two text columns.
 - `/mobile-preview`: 390 × 844 preview frame.
 
-Home and travel guide use the same available map area and aspect ratio at every breakpoint, so navigation does not change the map's scale or center. Every entry to the guide starts with names hidden. Above 640px wide, Freetown's label sits 9px higher and Goldpoint's 9px lower; their dots and mobile label positions are unchanged.
+Home and travel guide use the same available map area and aspect ratio at every breakpoint, so navigation does not change the map's scale or center. The mobile homepage wordmark is centered vertically over that map area. Every entry to the guide starts with names hidden. Above 640px wide, Freetown's label sits 9px higher and Goldpoint's 9px lower; their dots and mobile label positions are unchanged.
 
 ## Run
 
