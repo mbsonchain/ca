@@ -16,9 +16,15 @@
   </style>
 </head>
 <body>
-  <header><span>desktop preview · flowers</span><a href="/travel-guide" target="_blank" rel="noopener">view full size ↗</a></header>
+  <header><span>desktop preview</span><a href="/travel-guide" target="_blank" rel="noopener">view full size ↗</a></header>
   <main class="preview"><div class="frame"><iframe src="/travel-guide" title="Interactive desktop travel guide with flowers"></iframe></div></main>
   <script>
+    const page = new URLSearchParams(location.search).get('page');
+    if (['visit-conamore', 'travel-guide'].includes(page)) {
+      document.querySelector('iframe').src = `/${page}`;
+      document.querySelector('iframe').title = `Conamore ${page} at desktop size`;
+      document.querySelector('header a').href = `/${page}`;
+    }
     function fitPreview() {
       const scale = Math.min((innerWidth - 24) / 1440, (innerHeight - 72) / 900, 1);
       document.documentElement.style.setProperty('--scale', Math.max(.1, scale));

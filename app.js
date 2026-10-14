@@ -1,5 +1,6 @@
 import { places } from './places.js';
-import { collectionCopy } from './collection.js';
+import { collectionArticle } from './collection.js';
+import { renderArticle } from './article.js';
 import { setupMapLabels } from './map-labels.js';
 import { setupCards } from './place-cards.js';
 
@@ -21,11 +22,26 @@ function bar({ home = false } = {}) {
   return `<header class="page-bar${home ? ' home-bar' : ''}"><nav aria-label="Site navigation"><a href="/"${home ? ' aria-current="page"' : ''}>home</a><a href="https://desertformal.com">formal</a><a href="https://strikeout.us">strikeout</a></nav></header>`;
 }
 
+function flowers({ linked = false } = {}) {
+  const flower = position => {
+    const image = '<img src="/assets/conamore-flower.png" width="583" height="618" alt="" draggable="false">';
+    const className = `side-flower side-flower--${position}`;
+    return linked
+      ? `<a class="${className}" href="/visit-conamore" aria-label="Visit Conamore">${image}</a>`
+      : `<span class="${className}">${image}</span>`;
+  };
+  return `<div class="side-flowers ${linked ? 'guide-flowers' : 'collection-flowers'}"${linked ? '' : ' aria-hidden="true"'}>
+    <div class="flower-side flower-side--left">${flower('one')}${flower('two')}</div>
+    <div class="flower-side flower-side--right">${flower('three')}${flower('four')}</div>
+  </div>`;
+}
+
 function render({ focus = false } = {}) {
   cleanup();
   cleanup = () => {};
   const path = location.pathname.replace(/\/$/, '') || '/';
-  document.body.classList.toggle('fixed-map-page', ['/', '/travel-guide', '/visit-conamore'].includes(path));
+  document.body.classList.toggle('fixed-map-page', ['/', '/travel-guide'].includes(path));
+  document.body.classList.toggle('collection-page', path === '/visit-conamore');
   let section = '';
   if (path === '/') {
     document.title = 'Conamore';
@@ -35,16 +51,7 @@ function render({ focus = false } = {}) {
     document.title = 'Travel guide — Conamore';
     main.innerHTML = `${bar()}<div class="guide-page"><h1 class="sr-only">travel guide</h1>
       <button class="guide-background" aria-label="Show place names" aria-pressed="false" aria-controls="map-labels"></button>
-      <div class="guide-flowers" aria-hidden="true">
-        <div class="guide-flower-side guide-flower-side--left">
-          <img class="guide-flower guide-flower--one" src="/assets/conamore-flower.png" width="583" height="618" alt="" draggable="false">
-          <img class="guide-flower guide-flower--two" src="/assets/conamore-flower.png" width="583" height="618" alt="" draggable="false">
-        </div>
-        <div class="guide-flower-side guide-flower-side--right">
-          <img class="guide-flower guide-flower--three" src="/assets/conamore-flower.png" width="583" height="618" alt="" draggable="false">
-          <img class="guide-flower guide-flower--four" src="/assets/conamore-flower.png" width="583" height="618" alt="" draggable="false">
-        </div>
-      </div>
+      ${flowers({ linked: true })}
       <section class="map-stage" aria-label="Explore the places of Conamore">
         <div class="map-canvas">
           <img class="map-image" src="${mapImage}" width="1024" height="1536" alt="Conamore travel map. Hover, focus or tap a location to find out more.">
@@ -72,11 +79,14 @@ function render({ focus = false } = {}) {
       </article>`;
   } else if (path === '/visit-conamore') {
     section = 'collection';
-    document.title = 'Visit Conamore — the collection';
-    main.innerHTML = `${bar()}<article class="collection"><div class="collection-content"><h1 class="collection-wordmark"><a href="/">CONAMORE</a></h1><div class="collection-copy">
-      ${collectionCopy.split('\n\n').map((p, i) => `<p${i === 0 ? ' class="collection-intro"' : ''}>${escape(p)}</p>`).join('')}
-      </div></div></article>`;
-    fitCollection();
+    document.title = 'Visit Conamore';
+    main.innerHTML = `${bar()}<section class="collection" aria-label="Visit Conamore">
+      ${flowers()}
+      <h1 class="collection-wordmark"><a href="/" aria-label="Conamore — home">CONAMORE</a></h1>
+      <article class="collection-content" aria-label="${escape(collectionArticle.title || 'About the collection')}">
+        ${renderArticle(collectionArticle)}
+      </article>
+    </section>`;
   } else {
     document.title = 'Not found — Conamore';
     main.innerHTML = `${bar()}<section class="not-found"><h1>off the map.</h1><p><a href="/travel-guide">back to the travel guide →</a></p></section>`;
@@ -86,42 +96,6 @@ function render({ focus = false } = {}) {
     else a.removeAttribute('aria-current');
   });
   if (focus) main.focus({ preventScroll: true });
-}
-
-function fitCollection() {
-  const frame = document.querySelector('.collection');
-  const content = document.querySelector('.collection-content');
-  let pendingFrame;
-  let disposed = false;
-  function fit() {
-    if (disposed) return;
-    const style = getComputedStyle(frame);
-    const available = frame.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
-    if (available <= 0) return;
-    const setScale = scale => content.style.setProperty('--collection-fit', String(scale));
-    const fits = () => Math.max(content.scrollHeight, content.getBoundingClientRect().height) <= available - 1;
-    setScale(1);
-    if (fits()) return;
-    // Keep every paragraph and use the largest type that fits the real viewport.
-    let low = .25;
-    let high = 1;
-    for (let step = 0; step < 12; step++) {
-      const scale = (low + high) / 2;
-      setScale(scale);
-      if (fits()) low = scale;
-      else high = scale;
-    }
-    setScale(low);
-  }
-  function scheduleFit() {
-    cancelAnimationFrame(pendingFrame);
-    pendingFrame = requestAnimationFrame(fit);
-  }
-  const observer = new ResizeObserver(scheduleFit);
-  observer.observe(frame);
-  document.fonts.ready.then(() => { if (!disposed) scheduleFit(); });
-  fit();
-  cleanup = () => { disposed = true; observer.disconnect(); cancelAnimationFrame(pendingFrame); };
 }
 
 function navigate(url) {
