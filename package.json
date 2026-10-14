@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "build": "node scripts/build.mjs",
-    "check": "node --check app.js && node --check places.js && node --check collection.js && node --check scripts/build.mjs && node --check scripts/serve.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check app.js && node --check places.js && node --check collection.js && node --check map-labels.js && node --check scripts/build.mjs && node --check scripts/serve.mjs"
   }
 }
