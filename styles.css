@@ -90,8 +90,8 @@ main:focus { outline: 0; }
 .collection { position: relative; min-height: calc(100svh - var(--header-height)); }
 /* The final paragraph can scroll above the fixed wordmark, including on short screens. */
 .collection-content { position: relative; width: var(--article-width); margin: 0 auto; padding: 36px 0 calc(50svh + var(--footer-height) + 72px); font: 900 17px/1.75 var(--sans); overflow-wrap: anywhere; }
-.collection-wordmark { position: fixed; z-index: 5; left: 50%; top: calc(50svh + (var(--header-height) - var(--footer-height)) / 2); transform: translate(-50%, -50%); width: var(--article-width); padding: 16px 0; background: #fff; text-align: center; font: 900 clamp(42px, 8.1vw, 104px)/1 'articulat-heavy-cf', var(--sans); letter-spacing: -.045em; white-space: nowrap; pointer-events: none; }
-.collection-wordmark a { display: inline-block; padding-right: .045em; color: var(--ink); pointer-events: auto; }
+.collection-wordmark { position: fixed; z-index: 5; left: 50%; top: calc(50svh + (var(--header-height) - var(--footer-height)) / 2); transform: translate(-50%, -50%); width: var(--article-width); padding: 16px 0; text-align: center; font: 900 clamp(42px, 8.1vw, 104px)/1 'articulat-heavy-cf', var(--sans); letter-spacing: -.045em; white-space: nowrap; pointer-events: none; }
+.collection-wordmark a { display: inline-block; padding-right: .045em; color: rgb(8 8 8 / .28); pointer-events: auto; }
 .collection-content p { margin-bottom: 1.6em; }
 .collection-content p:last-child { margin-bottom: 0; }
 .collection-intro { font-size: 1.15em; line-height: 1.65; }
