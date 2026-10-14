@@ -41,6 +41,10 @@ main:focus { outline: 0; }
 .map-image { width: 100%; height: 100%; object-fit: fill; pointer-events: auto; }
 .map-labels { position: absolute; inset: 0; pointer-events: none; }
 .map-label { position: absolute; transform: translateY(-50%); font-size: clamp(9px, 1.2vw, 12px); line-height: 1.05; color: #07144b; white-space: nowrap; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
+@media (min-width: 641px) {
+  .map-label[data-label='freetown'] { transform: translateY(calc(-50% - 9px)); }
+  .map-label[data-label='goldpoint'] { transform: translateY(calc(-50% + 9px)); }
+}
 .hotspot { position: absolute; left: var(--x); top: var(--y); width: 30px; height: 30px; transform: translate(-50%, -50%); padding: 0; display: grid; place-items: center; color: var(--ink); pointer-events: auto; }
 .hotspot::after { content: ''; width: 19px; height: 19px; border: 1px solid transparent; border-radius: 50%; transition: border-color 120ms, transform 120ms; }
 .hotspot:hover::after, .hotspot[aria-expanded='true']::after, .hotspot:focus-visible::after { border-color: var(--ink); transform: scale(1.2); }

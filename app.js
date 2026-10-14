@@ -14,7 +14,7 @@ function mapLabel(place) {
   const left = ['orangepoint', 'freetown', 'open-city'].includes(place.slug);
   const name = ['freetown-formal', 'island-formal', 'sunset-cliffs'].includes(place.slug) ? escape(place.name).replace(' ', '<br>') : escape(place.name);
   const drop = { laketown: 6, santamore: 9, orangepoint: -9 }[place.slug] || 0;
-  return `<span class="map-label" data-x="${place.x}" data-side="${left ? 'left' : 'right'}" style="top:calc(${place.y / 1536 * 100}% + ${drop}px)">${name}</span>`;
+  return `<span class="map-label" data-label="${place.slug}" data-x="${place.x}" data-side="${left ? 'left' : 'right'}" style="top:calc(${place.y / 1536 * 100}% + ${drop}px)">${name}</span>`;
 }
 
 function bar({ home = false } = {}) {
