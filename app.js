@@ -40,7 +40,7 @@ function render({ focus = false } = {}) {
   cleanup();
   cleanup = () => {};
   const path = location.pathname.replace(/\/$/, '') || '/';
-  document.body.classList.toggle('fixed-map-page', ['/', '/travel-guide'].includes(path));
+  document.body.classList.toggle('fixed-map-page', ['/', '/travel-guide', '/visit-conamore'].includes(path));
   document.body.classList.toggle('collection-page', path === '/visit-conamore');
   let section = '';
   if (path === '/') {
@@ -83,7 +83,7 @@ function render({ focus = false } = {}) {
     main.innerHTML = `${bar()}<section class="collection" aria-label="Visit Conamore">
       ${flowers()}
       <h1 class="collection-wordmark"><a href="/" aria-label="Conamore — home">CONAMORE</a></h1>
-      <article class="collection-content" aria-label="${escape(collectionArticle.title || 'About the collection')}">
+      <article class="collection-content" tabindex="0" aria-label="${escape(collectionArticle.title || 'About the collection')}">
         ${renderArticle(collectionArticle)}
       </article>
     </section>`;
@@ -99,7 +99,7 @@ function render({ focus = false } = {}) {
 }
 
 function navigate(url) {
-  history.replaceState({ ...history.state, scroll: scrollY }, '', location.href);
+  history.replaceState({ ...history.state, scroll: scrollY, articleScroll: document.querySelector('.collection-content')?.scrollTop || 0 }, '', location.href);
   history.pushState({}, '', url);
   render({ focus: true });
   window.scrollTo(0, 0);
@@ -112,6 +112,11 @@ document.addEventListener('click', event => {
   event.preventDefault();
   navigate(url.pathname + url.search);
 });
-window.addEventListener('popstate', () => { render({ focus: true }); window.scrollTo(0, history.state?.scroll || 0); });
+window.addEventListener('popstate', () => {
+  render({ focus: true });
+  window.scrollTo(0, history.state?.scroll || 0);
+  const article = document.querySelector('.collection-content');
+  if (article) article.scrollTop = history.state?.articleScroll || 0;
+});
 history.scrollRestoration = 'manual';
 render();
