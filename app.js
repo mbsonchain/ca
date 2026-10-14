@@ -35,6 +35,16 @@ function render({ focus = false } = {}) {
     document.title = 'Travel guide — Conamore';
     main.innerHTML = `${bar()}<div class="guide-page"><h1 class="sr-only">travel guide</h1>
       <button class="guide-background" aria-label="Show place names" aria-pressed="false" aria-controls="map-labels"></button>
+      <div class="guide-flowers" aria-hidden="true">
+        <div class="guide-flower-side guide-flower-side--left">
+          <img class="guide-flower guide-flower--one" src="/assets/conamore-flower.png" width="583" height="618" alt="" draggable="false">
+          <img class="guide-flower guide-flower--two" src="/assets/conamore-flower.png" width="583" height="618" alt="" draggable="false">
+        </div>
+        <div class="guide-flower-side guide-flower-side--right">
+          <img class="guide-flower guide-flower--three" src="/assets/conamore-flower.png" width="583" height="618" alt="" draggable="false">
+          <img class="guide-flower guide-flower--four" src="/assets/conamore-flower.png" width="583" height="618" alt="" draggable="false">
+        </div>
+      </div>
       <section class="map-stage" aria-label="Explore the places of Conamore">
         <div class="map-canvas">
           <img class="map-image" src="${mapImage}" width="1024" height="1536" alt="Conamore travel map. Hover, focus or tap a location to find out more.">

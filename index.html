@@ -22,6 +22,14 @@
           <feFuncB type="table" tableValues="0 .05 .1 .15 .2 .25 .3 .35 .4 .45 .5 .55 .6 .65 .7 .75 .8 .85 .9 1 1"/>
         </feComponentTransfer>
       </filter>
+      <filter id="flower-soft-ink" color-interpolation-filters="sRGB">
+        <!-- Soften the dark outlines while keeping light petal colors and alpha intact. -->
+        <feComponentTransfer>
+          <feFuncR type="table" tableValues=".32 .35 .39 .44 .5 .625 .75 .875 1"/>
+          <feFuncG type="table" tableValues=".32 .35 .39 .44 .5 .625 .75 .875 1"/>
+          <feFuncB type="table" tableValues=".32 .35 .39 .44 .5 .625 .75 .875 1"/>
+        </feComponentTransfer>
+      </filter>
     </defs>
   </svg>
   <a class="skip-link" href="#main">skip to content</a>

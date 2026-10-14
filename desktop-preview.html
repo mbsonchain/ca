@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Conamore — desktop preview</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f5f5f5; color: #080808; font: 12px/1.5 'Courier New', monospace; }
+    header { height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; gap: 16px; }
+    a { color: inherit; text-underline-offset: 3px; }
+    .preview { height: calc(100svh - 48px); padding: 12px; display: grid; place-items: center; }
+    .frame { width: calc(1440px * var(--scale)); height: calc(900px * var(--scale)); background: #fff; box-shadow: 0 0 0 1px #e7e7e7; }
+    iframe { display: block; width: 1440px; height: 900px; border: 0; transform: scale(var(--scale)); transform-origin: top left; }
+  </style>
+</head>
+<body>
+  <header><span>desktop preview · flowers</span><a href="/travel-guide" target="_blank" rel="noopener">view full size ↗</a></header>
+  <main class="preview"><div class="frame"><iframe src="/travel-guide" title="Interactive desktop travel guide with flowers"></iframe></div></main>
+  <script>
+    function fitPreview() {
+      const scale = Math.min((innerWidth - 24) / 1440, (innerHeight - 72) / 900, 1);
+      document.documentElement.style.setProperty('--scale', Math.max(.1, scale));
+    }
+    addEventListener('resize', fitPreview);
+    fitPreview();
+  </script>
+</body>
+</html>
