@@ -24,7 +24,7 @@ export const interviewArticle = {
     {
       "type": "qa",
       "question": "DF: You’ve said that CONAMORE is about “bringing back something that we’ve lost.” That’s where I’d like to start, before we get into the films, the clothes, or the map.\nWhat do you think we’ve lost—and when did you first feel that absence in your own life? Was there a particular moment, or did you only begin to recognize it when you experienced something different somewhere else?",
-      "answer": "MS: Love. Hope. Faith. There's a bunch of different words, but I think they all basically mean the same thing. Beauty. I've spent the better part of the last 3 years working on this collection. At least 4 or 5 scripts I threw away. Dozens if not hundreds of conversations. Hundreds of not thousands of pages of sketches. So I felt that absence many times. Every time I crumble up paper, it's easy to feel like I'm not good enough. But I was playing the wrong game. I think a lot of us are."
+      "answer": "MS: Love. Hope. Faith. Beauty. There's a bunch of different words, but I think they all basically mean the same thing. I've spent the better part of the last 3 years working on this collection. At least 4 or 5 scripts I threw away. Dozens if not hundreds of conversations. Hundreds if not thousands of pages of sketches. So I felt that absence many times. Every time I crumble up paper, it's easy to feel like I'm not good enough. But I was playing the wrong game. I think a lot of us are."
     },
     {
       "type": "qa",
