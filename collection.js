@@ -20,7 +20,6 @@ export const interviewPath = '/visit-conamore/conamore-is-a-place';
 // and speaker turns are preserved, apart from the requested removal of DF's
 // closing thank-you. CONAMORE is always uppercase.
 export const interviewArticle = {
-  "title": "CONAMORE is a place",
   "blocks": [
     {
       "type": "qa",
@@ -35,7 +34,7 @@ export const interviewArticle = {
     {
       "type": "qa",
       "question": "DF: A story drawn from your own pain can still give someone else something. So I’m interested in where that distinction lives for you.\nWhat changed in the work itself when you started thinking about giving? Take me to a scene, an image, or a piece of the collection where you first felt that difference.",
-      "answer": "MS: It was actually a conversation I had with a friend of mine who's an art historian. Much older, maybe 30 years or something of skin in the game. And we're talking about these Italian legends like Bermini or Caravaggio, but also some of the legends I grew up on, Hargrove, Basquiat, and what they all have in common. I think that's where art is really uniquely positioned. I think these artists were both giving themselves up to God and to the collective, which allowed them to touch someone I think most of us never will, and yet we can still experience their work and understand something, either about ourselves, or the world around us."
+      "answer": "MS: It was actually a conversation I had with a friend of mine who's an art historian. Much older, maybe 30 years or something of skin in the game. And we're talking about these Italian legends like Bermini or Caravaggio, but also some of the legends I grew up on, Hargrove, Basquiat, and what they all have in common. I think that's where art is really uniquely positioned. I think these artists were both giving themselves up to God and to the collective, which allowed them to touch something I think most of us never will, and yet we can still experience their work and understand something, either about ourselves, or the world around us."
     },
     {
       "type": "qa",

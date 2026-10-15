@@ -109,7 +109,8 @@ main:focus { outline: 0; }
 .article-quote cite { display: block; font: inherit; }
 /* Fit the introduction between the desktop navigation bars, with even gaps. */
 @media (min-width: 900px) {
-  .desktop-flower-column { display: grid; grid-template-rows: repeat(5, minmax(0, 1fr)); align-items: center; position: absolute; top: 16px; bottom: 20px; width: clamp(24px, calc((100vw - var(--article-width)) / 2 - 24px), 88px); pointer-events: none; user-select: none; }
+  .desktop-flower-column { display: grid; grid-template-rows: repeat(var(--flower-count, 5), minmax(0, 1fr)); align-items: center; position: absolute; top: 16px; bottom: 20px; width: clamp(24px, calc((100vw - var(--article-width)) / 2 - 24px), 88px); pointer-events: none; user-select: none; }
+  .desktop-flower-column--repeating { bottom: calc(var(--footer-height) + 40px); }
   .desktop-flower-column--right { right: calc((100vw - var(--article-width)) / 4); transform: translateX(50%); }
   .desktop-flower-column--left { left: calc((100vw - var(--article-width)) / 4); transform: translateX(-50%); }
   .desktop-flower-column img { width: 100%; height: 100%; max-height: min(11svh, 100px); object-fit: contain; }

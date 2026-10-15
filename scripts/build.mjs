@@ -11,7 +11,7 @@ const html = await readFile('index.html', 'utf8');
 const pages = [
   { slug: 'travel-guide', title: 'Travel guide' },
   { slug: 'visit-conamore', title: 'Visit CONAMORE' },
-  { slug: 'visit-conamore/conamore-is-a-place', title: 'CONAMORE is a place' },
+  { slug: 'visit-conamore/conamore-is-a-place', title: 'Interview' },
   ...places.map(p => ({ slug: `travel-guide/${p.slug}`, title: p.name })),
   { slug: '404', title: 'Not found' },
 ];
