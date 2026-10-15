@@ -6,7 +6,7 @@ export const collectionIntroduction = [
   "The man laughed. He had to bend down once for a small one, he explained, and once for a big one.",
   "“‘It’s the native way,’ he told me. I remember I felt so Western,” Salvadei jokes.",
   "The rain had stopped. The fisherman was shucking oysters behind his stand. People were enjoying their day.",
-  "“These things are so ordinary, but if you look a little closer, all of a sudden they’re magical,” Salvadei says.",
+  "“These things are so ordinary, but if you look a little closer, all of a sudden they’re magical.”",
   "CONAMORE, Salvadei says, is about bringing back “something that we’ve lost.”",
   "Asked what he thinks people have lost, he says, “We don't see the magic anymore. It's hard to. And if you can't see it, you can't carry it with you. So it slowly diminishes.”",
   "In CONAMORE, the fisherman belongs as much as the painter. Love knows no bounds.",
