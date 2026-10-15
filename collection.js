@@ -11,7 +11,7 @@ export const collectionIntroduction = [
   "Asked what he thinks people have lost, he says, “We don't see the magic anymore. It's hard to. And if you can't see it, you can't carry it with you. So it slowly diminishes.”",
   "In CONAMORE, the fisherman belongs as much as the painter. Love knows no bounds.",
   "After all this talk of what he hopes CONAMORE will give other people, what has it already given him?",
-  "“Everything,” he says."
+  "“Everything.”"
 ];
 
 export const interviewPath = '/visit-conamore/conamore-is-a-place';
