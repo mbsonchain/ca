@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <title>Conamore — desktop preview</title>
+  <title>CONAMORE — desktop preview</title>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; background: #f5f5f5; color: #080808; font: 12px/1.5 'Courier New', monospace; }
@@ -20,9 +20,9 @@
   <main class="preview"><div class="frame"><iframe src="/travel-guide" title="Interactive desktop travel guide with flowers"></iframe></div></main>
   <script>
     const page = new URLSearchParams(location.search).get('page');
-    if (['visit-conamore', 'travel-guide'].includes(page)) {
+    if (['visit-conamore', 'visit-conamore/conamore-is-a-place', 'travel-guide'].includes(page)) {
       document.querySelector('iframe').src = `/${page}`;
-      document.querySelector('iframe').title = `Conamore ${page} at desktop size`;
+      document.querySelector('iframe').title = `CONAMORE ${page} at desktop size`;
       document.querySelector('header a').href = `/${page}`;
     }
     function fitPreview() {
