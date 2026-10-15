@@ -33,7 +33,8 @@ main:focus { outline: 0; }
 .page-bar a { min-height: 44px; display: inline-flex; align-items: center; padding: 10px 0; justify-self: start; }
 .page-bar a:nth-child(2) { justify-self: center; }
 .page-bar a:last-child { justify-self: end; }
-.guide-page { --guide-map-width: min(calc((100svh - var(--header-height) - var(--footer-height) - 16px) * 2 / 3), calc(100vw - 2 * var(--map-gutter))); position: relative; height: calc(100svh - var(--header-height) - var(--footer-height)); display: grid; grid-template-rows: minmax(0, 1fr); padding: 8px var(--map-gutter); }
+.guide-page, .collection { --guide-map-width: min(calc((100svh - var(--header-height) - var(--footer-height) - 16px) * 2 / 3), calc(100vw - 2 * var(--map-gutter))); }
+.guide-page { position: relative; height: calc(100svh - var(--header-height) - var(--footer-height)); display: grid; grid-template-rows: minmax(0, 1fr); padding: 8px var(--map-gutter); }
 .guide-background { position: absolute; inset: 0; width: 100%; height: 100%; }
 .guide-background:focus-visible { outline-offset: -8px; }
 .map-stage { position: relative; min-height: 0; display: grid; place-items: center; pointer-events: none; }
@@ -41,8 +42,7 @@ main:focus { outline: 0; }
 .side-flowers { display: none; pointer-events: none; }
 @media (min-width: 900px) {
   .side-flowers { display: grid; grid-template-columns: minmax(0, 1fr) var(--flower-center-width) minmax(0, 1fr); }
-  .guide-flowers { --flower-center-width: var(--guide-map-width); position: absolute; inset: 8px var(--map-gutter); }
-  .collection-flowers { --flower-center-width: var(--article-width); position: fixed; inset: calc(var(--header-height) + 8px) var(--map-gutter) calc(var(--footer-height) + 8px); }
+  .guide-flowers, .collection-flowers { --flower-center-width: var(--guide-map-width); position: absolute; inset: 8px var(--map-gutter); }
   .flower-side { position: relative; min-width: 0; }
   .flower-side--left { grid-column: 1; }
   .flower-side--right { grid-column: 3; }
@@ -85,13 +85,13 @@ main:focus { outline: 0; }
 .nearby { margin-top: 35px; }
 .nearby h2 { font: inherit; margin-bottom: 10px; }
 .nearby a { display: inline-block; margin: 5px 15px 5px 0; text-decoration: underline; text-underline-offset: 4px; }
-.collection-page { --article-width: min(660px, calc(100vw - 48px)); }
-.collection-page .page-bar { position: sticky; top: 0; }
-.collection { position: relative; min-height: calc(100svh - var(--header-height)); }
-/* The final paragraph can scroll above the fixed wordmark, including on short screens. */
-.collection-content { position: relative; width: var(--article-width); margin: 0 auto; padding: 36px 0 calc(50svh + var(--footer-height) + 72px); font: 900 17px/1.75 var(--sans); overflow-wrap: anywhere; }
-.collection-wordmark { position: fixed; z-index: 5; left: 50%; top: calc(50svh + (var(--header-height) - var(--footer-height)) / 2); transform: translate(-50%, -50%); width: var(--article-width); padding: 16px 0; text-align: center; font: 900 clamp(42px, 8.1vw, 104px)/1 'articulat-heavy-cf', var(--sans); letter-spacing: -.045em; white-space: nowrap; pointer-events: none; }
-.collection-wordmark a { display: inline-block; padding-right: .045em; color: rgb(8 8 8 / .28); pointer-events: auto; }
+.collection-page { --article-width: min(600px, calc(100vw - 48px)); }
+.collection { position: relative; height: calc(100svh - var(--header-height) - var(--footer-height)); display: grid; grid-template-rows: auto minmax(0, 1fr); justify-items: center; gap: clamp(16px, 3svh, 28px); padding: 16px 24px 18px; overflow: hidden; }
+.collection-wordmark { position: relative; width: var(--article-width); text-align: center; font: 900 clamp(42px, 7vw, 92px)/1 'articulat-heavy-cf', var(--sans); letter-spacing: -.045em; white-space: nowrap; }
+.collection-wordmark a { display: inline-block; padding-right: .045em; color: var(--ink); }
+/* Only this bounded reader scrolls; the logo, flowers and navigation stay still. */
+.collection-content { position: relative; width: var(--article-width); min-height: 0; margin: 0; padding: 0 12px 28px; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: thin; scrollbar-color: var(--pink) transparent; font: 900 17px/1.75 var(--sans); overflow-wrap: anywhere; }
+.collection-content:focus-visible { outline: 1px solid var(--pink); outline-offset: 5px; }
 .collection-content p { margin-bottom: 1.6em; }
 .collection-content p:last-child { margin-bottom: 0; }
 .collection-intro { font-size: 1.15em; line-height: 1.65; }
@@ -103,7 +103,7 @@ main:focus { outline: 0; }
 .article-quote { margin: 2.5em 0; padding-left: 22px; border-left: 2px solid var(--pink); font-size: 1.2em; }
 .article-quote cite { display: block; font: 11px/1.6 var(--mono); }
 @media (min-width: 900px) {
-  .collection-page { --article-width: min(660px, calc(100vw - 320px)); }
+  .collection-page { --article-width: min(600px, 44vw); }
 }
 .no-script, .not-found { padding: 120px 30px; text-align: center; }
 @media (max-width: 640px) {
@@ -118,13 +118,18 @@ main:focus { outline: 0; }
   .map-crop { width: min(280px, 100%); margin: auto; }
   .detail-copy { max-width: 430px; margin: auto; }
   .detail h1 { font-size: 46px; }
-  .collection-content { padding-top: 24px; font-size: 16px; line-height: 1.7; }
-  .collection-wordmark { font-size: 12.1vw; padding: 14px 0; }
+  .collection { padding: 12px 24px 14px; gap: 24px; }
+  .collection-content { padding: 0 4px 24px; font-size: 16px; line-height: 1.7; }
+  .collection-wordmark { font-size: 12.1vw; }
 }
 @media (max-height: 500px) {
   :root { --header-height: 48px; --footer-height: 52px; --map-gutter: 16px; }
   .site-footer { padding: 0 20px; }
   .wordmark { font-size: min(12.1vw, 25svh); }
-  .collection-wordmark { font-size: min(12.1vw, 10svh); padding: 8px 0; }
+  .collection { padding-top: 8px; padding-bottom: 10px; gap: 12px; }
+  .collection-wordmark { font-size: min(12.1vw, 10svh); }
+}
+@media (min-width: 900px) and (max-height: 500px) {
+  .collection-page { --article-width: min(520px, 40vw); }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; } }
