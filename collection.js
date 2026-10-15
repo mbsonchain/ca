@@ -20,7 +20,6 @@ export const interviewPath = '/visit-conamore/conamore-is-a-place';
 // and speaker turns are preserved, apart from the requested removal of DF's
 // closing thank-you. CONAMORE is always uppercase.
 export const interviewArticle = {
-  "title": "CONAMORE is a place",
   "blocks": [
     {
       "type": "qa",

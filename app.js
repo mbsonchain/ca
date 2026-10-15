@@ -34,16 +34,25 @@ function flowers() {
   </div>`;
 }
 
-function setupMobileFlowers(collection) {
+function setupCollectionFlowers(collection) {
   const layer = collection.querySelector('.mobile-flowers');
   const article = collection.querySelector('.collection-content');
+  const repeatingColumns = [...collection.querySelectorAll('.desktop-flower-column--repeating')];
   let active = true;
   const arrange = () => {
     if (!active) return;
     if (!window.matchMedia('(max-width: 899px)').matches) {
       layer.replaceChildren();
+      if (repeatingColumns.length) {
+        const count = Math.max(5, Math.ceil(repeatingColumns[0].getBoundingClientRect().height / 150));
+        for (const column of repeatingColumns) {
+          column.style.setProperty('--flower-count', count);
+          if (column.childElementCount !== count) column.innerHTML = flowerColumnImages(count);
+        }
+      }
       return;
     }
+    for (const column of repeatingColumns) column.replaceChildren();
     const bounds = collection.getBoundingClientRect();
     const logo = collection.querySelector('.collection-wordmark a').getBoundingClientRect();
     const text = article.getBoundingClientRect();
@@ -76,9 +85,13 @@ function setupMobileFlowers(collection) {
   return () => { active = false; observer.disconnect(); };
 }
 
-function desktopFlowerColumn() {
-  const images = [1, 2, 3, 4, 5].map(number => `<img src="/assets/conamore-flower-sketch-${number}.svg" alt="" draggable="false">`).join('');
-  return ['left', 'right'].map(side => `<div class="desktop-flower-column desktop-flower-column--${side}" aria-hidden="true">${images}</div>`).join('');
+function flowerColumnImages(count) {
+  return Array.from({ length: count }, (_, index) => `<img src="/assets/conamore-flower-sketch-${index % 5 + 1}.svg" alt="" draggable="false">`).join('');
+}
+
+function desktopFlowerColumn({ repeating = false } = {}) {
+  const images = repeating ? '' : flowerColumnImages(5);
+  return ['left', 'right'].map(side => `<div class="desktop-flower-column desktop-flower-column--${side}${repeating ? ' desktop-flower-column--repeating' : ''}" aria-hidden="true">${images}</div>`).join('');
 }
 
 function render({ focus = false } = {}) {
@@ -130,27 +143,28 @@ function render({ focus = false } = {}) {
       <h1 class="collection-wordmark"><a href="/" aria-label="CONAMORE — home">CONAMORE</a></h1>
       <article class="collection-content collection-introduction" aria-label="About the collection">
         ${collectionIntroduction.map(paragraph => `<p>${escape(paragraph)}</p>`).join('')}
-        <p class="interview-invitation">Read the full interview <a href="${interviewPath}" aria-label="Read the full interview: CONAMORE is a place">here</a>.</p>
+        <p class="interview-invitation">Read the full interview <a href="${interviewPath}" aria-label="Read the full interview">here</a>.</p>
       </article>
       <div class="mobile-flowers" aria-hidden="true"></div>
       ${desktopFlowerColumn()}
     </section>`;
   } else if (path === interviewPath) {
     section = 'collection';
-    document.title = `${interviewArticle.title} — CONAMORE`;
+    document.title = 'Interview — CONAMORE';
     main.innerHTML = `${bar()}<section class="collection" aria-label="Visit CONAMORE">
-      <p class="collection-wordmark"><a href="/" aria-label="CONAMORE — home">CONAMORE</a></p>
-      <article class="collection-content interview-content" aria-label="${escape(interviewArticle.title)}">
-        ${renderArticle(interviewArticle, { titleLevel: 1, highlightQuestions: false })}
+      <h1 class="collection-wordmark"><a href="/" aria-label="CONAMORE — home">CONAMORE</a></h1>
+      <article class="collection-content interview-content" aria-label="Full interview">
+        ${renderArticle(interviewArticle, { highlightQuestions: false })}
         <p class="interview-return"><a href="/visit-conamore">← visit CONAMORE</a></p>
       </article>
       <div class="mobile-flowers" aria-hidden="true"></div>
+      ${desktopFlowerColumn({ repeating: true })}
     </section>`;
   } else {
     document.title = 'Not found — CONAMORE';
     main.innerHTML = `${bar()}<section class="not-found"><h1>off the map.</h1><p><a href="/travel-guide">back to the travel guide →</a></p></section>`;
   }
-  if (section === 'collection') cleanup = setupMobileFlowers(main.querySelector('.collection'));
+  if (section === 'collection') cleanup = setupCollectionFlowers(main.querySelector('.collection'));
   document.querySelectorAll('[data-nav]').forEach(a => {
     if (a.dataset.nav === section) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
