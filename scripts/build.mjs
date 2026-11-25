@@ -5,7 +5,7 @@ import { places } from '../places.js';
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist/travel-guide', { recursive: true });
 await mkdir('dist/visit-conamore', { recursive: true });
-for (const file of ['index.html', 'app.js', 'places.js', 'collection.js', 'article.js', 'map-labels.js', 'place-cards.js', 'styles.css', 'mobile-preview.html', 'desktop-preview.html']) await copyFile(file, `dist/${file}`);
+for (const file of ['index.html', 'app.js', 'places.js', 'collection.js', 'article.js', 'map-labels.js', 'place-cards.js', 'countdown.js', 'styles.css', 'mobile-preview.html', 'desktop-preview.html']) await copyFile(file, `dist/${file}`);
 await cp('assets', 'dist/assets', { recursive: true });
 const html = await readFile('index.html', 'utf8');
 const pages = [

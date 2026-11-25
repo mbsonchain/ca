@@ -3,6 +3,7 @@ import { collectionIntroduction, interviewArticle, interviewPath } from './colle
 import { renderArticle } from './article.js';
 import { setupMapLabels } from './map-labels.js';
 import { setupCards } from './place-cards.js';
+import { startCountdown } from './countdown.js';
 
 const main = document.querySelector('#main');
 const bySlug = new Map(places.map(place => [place.slug, place]));
@@ -19,7 +20,7 @@ function mapLabel(place) {
 }
 
 function bar({ home = false } = {}) {
-  return `<header class="page-bar${home ? ' home-bar' : ''}"><nav aria-label="Site navigation"><a href="/"${home ? ' aria-current="page"' : ''}>home</a><a href="https://desertformal.com">formal</a><a href="https://strikeout.us">strikeout</a></nav></header>`;
+  return `<header class="page-bar${home ? ' home-bar' : ''}"><nav aria-label="Site navigation"><a href="/"${home ? ' aria-current="page"' : ''}>home</a><a href="https://desertformal.com">FORMAL</a><a href="https://strikeout.us">strikeout</a></nav></header>`;
 }
 
 function flowers() {
@@ -180,4 +181,5 @@ window.addEventListener('popstate', () => {
   window.scrollTo(0, history.state?.scroll || 0);
 });
 history.scrollRestoration = 'manual';
+startCountdown(document.querySelector('.site-countdown'));
 render();
