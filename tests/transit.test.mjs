@@ -3,18 +3,19 @@ import test from 'node:test';
 import { planTrip, itinerary, roads } from '../routes.js';
 import { postedClosures } from '../road-network.js';
 import { clockTime, lines, nextTrip, serviceTime, stationDepartures } from '../transit.js';
-import { routeResult, stationInfo } from '../directions-view.js';
+import { mapOverlay, routeResult, stationInfo } from '../directions-view.js';
+import { setupMapArtwork } from '../directions.js';
 
 test('Flowertown to Hollywood is direct in both directions and through trains stay together', () => {
   for (const [from, to] of [['hollywood', 'flowertown'], ['flowertown', 'hollywood']]) {
     const r = planTrip(from, to, 'transit', 320);
     assert.deepEqual(r.legs.map(leg => leg.to), [to]);
-    assert.equal(r.riding, 29);
+    assert.equal(r.riding, 270);
   }
   const r = planTrip('amoreport', 'hollywood', 'transit', 330);
   assert.deepEqual(r.legs.map(leg => leg.to), ['us-city', 'flowertown', 'hollywood']);
   assert.equal(itinerary(r.legs).length, 1);
-  assert.equal(r.riding, 17 + 32 + 29 + 4);
+  assert.equal(r.riding, 130 + 230 + 270 + 16);
   assert.equal(r.waiting, 0);
   assert.equal(r.total, r.driving + r.riding + r.waiting);
   assert.deepEqual(stationDepartures('open-city', 0), []);
@@ -36,16 +37,16 @@ test('only the three requested lines are in progress and no trains run on the is
   }
 });
 
-test('all operating links have two-way departures, last service and no next-day spill', () => {
+test('boards show only departures within the current day, including overnight trains', () => {
   for (const edge of lines.filter(e => e.status === 'running')) {
     for (const [a, b] of [[edge.from, edge.to], [edge.to, edge.from]]) {
       const runs = stationDepartures(a, 0).filter(row => row.to === b);
       assert.ok(runs.length > 1);
       const first = runs[0], last = runs.at(-1);
-      assert.equal(nextTrip(a, b, first.departure), first);
-      assert.notEqual(nextTrip(a, b, first.departure + 1), first);
+      assert.deepEqual(nextTrip(a, b, first.departure), first);
+      assert.notEqual(nextTrip(a, b, first.departure + 1)?.run, first.run);
       assert.equal(nextTrip(a, b, last.departure + 1), undefined);
-      assert.ok(last.arrival < 1440);
+      assert.ok(runs.every(trip => trip.departure >= 0 && trip.departure < 1440 && trip.arrival > trip.departure));
     }
   }
   assert.equal(planTrip('greenpoint', 'goldpoint', 'transit', 1439).status, 'finished');
@@ -81,7 +82,7 @@ test('both posted breaks match the atlas and force real detours while roads stay
   const crossing = planTrip('freetown', 'clifftown', 'road', 340);
   assert.equal(crossing.driving, 0);
   assert.equal(crossing.waiting, 5);
-  assert.equal(crossing.riding, 18);
+  assert.equal(crossing.riding, 165);
 });
 
 test('station boards and direction notices distinguish completed and planned service', () => {
@@ -95,4 +96,77 @@ test('station boards and direction notices distinguish completed and planned ser
   const view = routeResult('formal-city', 'hollywood', 'transit', r, now, []);
   assert.match(view, /Direct train · In progress/);
   assert.match(view, /Sant’Amore/);
+});
+
+test('the eastern ferry and the desert road give the atlas its long-distance times', () => {
+  const mainland = planTrip('freetown', 'formal-city', 'road', 380);
+  assert.deepEqual(mainland.legs.map(leg => leg.to), ['sfida', 'east-fork', 'formal-city']);
+  assert.deepEqual([mainland.riding, mainland.driving, mainland.total], [270, 720, 990]);
+  const drive = planTrip('formal-city', 'hollywood', 'road', 1320);
+  assert.equal(drive.driving, 480);
+  assert.equal(clockTime(drive.arrival), '6:00 AM (+1 day)');
+  const fullTrip = planTrip('freetown', 'hollywood', 'road', 380);
+  assert.equal(fullTrip.riding + fullTrip.driving, 1470);
+});
+
+test('a through train crosses midnight without changing runs or charging a transfer', () => {
+  const result = planTrip('amoreport', 'hollywood', 'transit', 1290);
+  assert.ok(result.legs.at(-1).departure >= 1440);
+  assert.equal(new Set(result.legs.map(leg => leg.run)).size, 1);
+  assert.equal(result.waiting, 0);
+  assert.equal(itinerary(result.legs).length, 1);
+  assert.equal(result.total, 646);
+  const boarding = stationDepartures('flowertown', 0).find(trip => trip.to === 'hollywood' && trip.departure === 226);
+  assert.ok(boarding);
+  assert.equal(boarding.arrival, 496);
+  assert.equal(nextTrip('flowertown', 'hollywood', 1440), undefined);
+});
+
+test('the northern closure detour can catch ferries on later days without listing their timetables', () => {
+  const route = planTrip('amoreport', 'camporella', 'road', 520);
+  assert.equal(route.status, 'ok');
+  assert.ok(route.arrival > 2 * 1440);
+  assert.equal(route.total, route.waiting + route.driving + route.riding);
+  assert.ok(route.legs.filter(l => l.edge.mode === 'ferry').every(l => l.departure >= 1440));
+  const html = routeResult('amoreport', 'camporella', 'road', route, { day: 'Sun' }, []);
+  assert.match(html, /\(\+2 days\)/);
+  assert.match(html, /on day 2/);
+  assert.match(html, /Day 3 ·/);
+  assert.deepEqual(stationDepartures('camporella', 1440), []);
+});
+
+test('the transit map draws only the rail and ferry network, its status and town symbols', () => {
+  const transit = mapOverlay('transit', '', '', [], []);
+  assert.equal((transit.match(/class="network train"/g) || []).length, 5);
+  assert.equal((transit.match(/class="network ferry"/g) || []).length, 4);
+  assert.equal((transit.match(/class="network in-progress"/g) || []).length, 3);
+  assert.equal((transit.match(/class="transit-town/g) || []).length, 20);
+  assert.doesNotMatch(transit, /closed-mark|route-line road/);
+  const road = mapOverlay('road', '', '', [], []);
+  assert.match(road, /closed-mark/);
+  assert.doesNotMatch(road, /class="network|transit-town/);
+});
+
+test('switching modes keeps the previous artwork hidden until the selected image is ready', () => {
+  const road = '/assets/conamore-map.png', transit = '/assets/conamore-transit-terrain.webp';
+  const image = Object.assign(new EventTarget(), {
+    src: road, currentSrc: road, complete: true, naturalWidth: 1024, style: {},
+    getAttribute(key) { return this[key]; },
+  });
+  const show = setupMapArtwork(image, new AbortController().signal);
+  show('road');
+  assert.match(image.alt, /road map/);
+  show('transit');
+  assert.equal(image.src, transit);
+  image.dispatchEvent(new Event('load'));
+  assert.equal(image.style.visibility, 'hidden');
+  image.currentSrc = transit;
+  image.dispatchEvent(new Event('load'));
+  assert.equal(image.style.visibility, '');
+  assert.match(image.alt, /rail and ferry/);
+  show('road');
+  assert.equal(image.src, road);
+  assert.equal(image.style.visibility, 'hidden');
+  show('transit');
+  assert.equal(image.style.visibility, '');
 });

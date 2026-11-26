@@ -18,7 +18,8 @@ function field(key) {
 }
 
 export function directionsControls() {
-  return `<div class="map-tools"><div class="map-modes" role="group" aria-label="Travel mode">
+  return `<link rel="stylesheet" href="/assets/transit-map.css">
+    <div class="map-tools"><div class="map-modes" role="group" aria-label="Travel mode">
     <button type="button" data-mode="road" aria-pressed="true">Road</button>
     <button type="button" data-mode="transit" aria-pressed="false">Rail &amp; ferry</button>
     </div><div class="network-key" hidden><span>Train</span><span>Ferry</span><span>In progress</span></div></div>
@@ -27,6 +28,24 @@ export function directionsControls() {
         <button type="button" class="sheet-close" aria-label="Close directions">×</button></div>
       <div id="trip-body">${field('from')}${field('to')}<div class="trip-result" aria-live="polite"></div></div>
     </section>`;
+}
+
+export function setupMapArtwork(image, signal) {
+  const roadSource = image.getAttribute('src');
+  function reveal() {
+    if (image.complete && image.naturalWidth && image.currentSrc === image.src) image.style.visibility = '';
+  }
+  image.addEventListener('load', reveal, { signal });
+  return mode => {
+    const transit = mode === 'transit';
+    const source = transit ? '/assets/conamore-transit-terrain.webp' : roadSource;
+    image.alt = transit ? 'CONAMORE rail and ferry map. Choose a town for departures and directions.'
+      : 'CONAMORE road map. Choose a town to explore or get directions.';
+    if (image.getAttribute('src') === source) return;
+    image.style.visibility = 'hidden';
+    image.src = source;
+    reveal();
+  };
 }
 
 export function setupDirections(page) {
@@ -41,6 +60,7 @@ export function setupDirections(page) {
   const selected = Object.fromEntries(Object.keys(inputs).map(k => [k, ids.has(params.get(k)) ? params.get(k) : '']));
   const extra = new Set((params.get('closed') || '').split(',').filter(id => !postedClosures.has(id) && roads.some(edge => edge.id === id)));
   const controller = new AbortController();
+  const showMap = setupMapArtwork(page.querySelector('.map-image'), controller.signal);
   const on = (el, type, callback) => el.addEventListener(type, callback, { signal: controller.signal });
   let picking = '', listKey = '', options = [], highlight = -1, restoreFocus, timer;
   let now = serviceTime();
@@ -62,6 +82,7 @@ export function setupDirections(page) {
     const { from, to } = selected;
     const route = from && to ? planTrip(from, to, mode, now.minute, extra) : null;
     for (const button of controls) button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
+    showMap(mode);
     key.hidden = mode !== 'transit';
     const map = mapOverlay(mode, from, to, route?.legs, extra);
     if (overlay._rendered !== map) { overlay.innerHTML = map; overlay._rendered = map; }
