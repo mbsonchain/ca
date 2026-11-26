@@ -4,7 +4,7 @@ body { margin: 0; min-width: 280px; background: #fff; }
 body.fixed-map-page { height: 100svh; overflow: hidden; }
 .map-filter { position: absolute; pointer-events: none; }
 /* Lift the near-white paper texture to pure white; preserve dark/mid tones. */
-.home-map, .map-image, .map-crop img { filter: url(#map-paper-white); }
+.map-image, .map-crop img { filter: url(#map-paper-white); }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; border-radius: 0; }
 a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
@@ -18,16 +18,14 @@ main:focus { outline: 0; }
 .skip-link { position: fixed; left: 20px; top: -100px; z-index: 100; padding: 10px; background: white; }
 .skip-link:focus { top: 10px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-body:has(.home), .guide-page {
+.atlas-page {
   --atlas-top-gap: 38px;
   --atlas-bottom-gap: 6px;
   --atlas-usable-height: calc(100svh - var(--header-height) - var(--footer-height) - var(--atlas-top-gap) - var(--atlas-bottom-gap));
   --guide-map-width: min(calc(var(--atlas-usable-height) * 2 / 3), calc(100vw - 2 * var(--map-gutter)));
 }
-.home { height: 100svh; min-height: 0; display: grid; place-items: center; padding: calc(var(--header-height) + var(--atlas-top-gap)) var(--map-gutter) calc(var(--footer-height) + var(--atlas-bottom-gap)); position: relative; }
-.home-map-link { display: block; width: var(--guide-map-width); aspect-ratio: 2 / 3; min-height: 0; }
-.home-map { height: 100%; width: 100%; object-fit: contain; min-height: 0; }
-.wordmark { position: absolute; left: 50%; top: calc(50% + (var(--header-height) + var(--atlas-top-gap) - var(--footer-height) - var(--atlas-bottom-gap)) / 2 - var(--guide-map-width) * .06); transform: translate(-50%, -50%); width: 100%; text-align: center; font: 900 clamp(46px, 12.2vw, 210px)/1 'articulat-heavy-cf', var(--sans); letter-spacing: -.045em; padding-right: .045em; white-space: nowrap; pointer-events: none; }
+.home-map-link { position: absolute; inset: 0; pointer-events: auto; }
+.wordmark { position: absolute; left: 50%; top: calc(50% - var(--guide-map-width) * .06); transform: translate(-50%, -50%); width: 100vw; text-align: center; font: 900 clamp(46px, 12.2vw, 210px)/1 'articulat-heavy-cf', var(--sans); letter-spacing: -.045em; padding-right: .045em; white-space: nowrap; pointer-events: none; }
 .wordmark a { display: inline-block; pointer-events: auto; color: var(--ink); }
 .site-footer { position: fixed; bottom: 0; left: 0; right: 0; height: var(--footer-height); display: grid; align-content: end; justify-items: center; row-gap: 8px; padding: 0 20px var(--footer-bottom); background: #fff; z-index: 20; }
 .site-countdown { position: fixed; top: calc(var(--header-height) + var(--atlas-control-top)); left: var(--atlas-control-left); display: grid; align-items: center; min-height: var(--atlas-control-height); font-size: 14px; line-height: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -35,14 +33,14 @@ body:has(.home), .guide-page {
 .site-footer a { min-height: 44px; display: inline-flex; align-items: center; padding: 5px 0; }
 .site-footer a[aria-current='page'], .page-bar a[aria-current='page'] { color: var(--pink); text-decoration: none; }
 .page-bar { position: relative; z-index: 10; height: var(--header-height); padding: 0 32px; background: #fff; }
-.home-bar { position: absolute; top: 0; left: 0; right: 0; }
 .page-bar nav { height: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; gap: 16px; }
 .page-bar a { min-height: 44px; display: inline-flex; align-items: center; padding: 10px 0; justify-self: start; }
 .page-bar a:nth-child(2) { justify-self: center; }
 .page-bar a:last-child { justify-self: end; }
-.guide-page { position: relative; height: calc(100svh - var(--header-height) - var(--footer-height)); display: grid; grid-template-rows: minmax(0, 1fr); padding: var(--atlas-top-gap) var(--map-gutter) var(--atlas-bottom-gap); }
+.atlas-page { position: relative; height: calc(100svh - var(--header-height) - var(--footer-height)); display: grid; grid-template-rows: minmax(0, 1fr); padding: var(--atlas-top-gap) var(--map-gutter) var(--atlas-bottom-gap); }
 .guide-background { position: absolute; inset: 0; width: 100%; height: 100%; }
 .guide-background:focus-visible { outline-offset: -8px; }
+.atlas-tools { display: contents; }
 .map-stage { position: relative; min-height: 0; display: grid; place-items: center; pointer-events: none; }
 .map-canvas { position: relative; width: var(--guide-map-width); aspect-ratio: 2 / 3; }
 .side-flowers { display: none; pointer-events: none; }
@@ -62,7 +60,9 @@ body:has(.home), .guide-page {
   .side-flower--three { width: clamp(62px, 7vw, 100px); left: 43%; top: 20%; }
   .side-flower--four { width: clamp(96px, 11.5vw, 166px); left: 63%; top: 71%; }
 }
+.map-layer { position: absolute; inset: 0; }
 .map-image { width: 100%; height: 100%; object-fit: fill; pointer-events: auto; }
+.home .route-overlay { display: none; }
 .map-labels { position: absolute; inset: 0; pointer-events: none; }
 .map-label { position: absolute; transform: translateY(-50%); font-size: clamp(9px, 1.2vw, 12px); line-height: 1.05; color: #07144b; white-space: nowrap; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
 .map-label[data-side='below'] { transform: none; }
@@ -107,13 +107,13 @@ main:has(.detail) { height: calc(100svh - var(--footer-height)); display: grid; 
 .article-title { font: inherit; font-weight: 700; margin: 0 0 2.5em; }
 .collection-content .article-byline { font: inherit; margin-bottom: 2em; }
 .article-exchange { margin: 0 0 3.2em; }
-.article-question { font: inherit; font-weight: 700; margin: 0 0 1.4em; white-space: pre-line; }
+.article-question { font: inherit; font-weight: 700; margin: 0 0 1.4em; }
 .article-quote { margin: 2.5em 0; padding-left: 22px; border-left: 2px solid var(--pink); font: inherit; }
 .article-quote cite { display: block; font: inherit; }
 .no-script, .not-found { padding: 120px 30px; text-align: center; }
 @media (max-width: 640px) {
   :root { --header-height: 64px; --footer-bottom: max(3px, env(safe-area-inset-bottom, 0px)); --footer-height: calc(73px + var(--footer-bottom)); --map-gutter: 5px; }
-  .wordmark { font-size: 12.1vw; top: calc(50% + (var(--header-height) + var(--atlas-top-gap) - var(--footer-height) - var(--atlas-bottom-gap)) / 2); }
+  .wordmark { font-size: 12.1vw; top: 50%; }
   .page-bar { padding: 0 20px; font-size: 11px; }
   .hotspot { width: 30px; height: 30px; }
   .site-footer { font-size: 11px; }
@@ -140,7 +140,7 @@ main:has(.detail) { height: calc(100svh - var(--footer-height)); display: grid; 
   -webkit-touch-callout: none;
 }
 
-body:has(.home), body:has(.guide-page), body:has(.detail) { --footer-height: calc(46px + var(--footer-bottom)); }
+body:has(.atlas-page), body:has(.detail) { --footer-height: calc(46px + var(--footer-bottom)); }
 .site-footer nav a { padding: 12px 0 0; }
 @media (max-width: 640px) and (orientation: portrait) {
   .detail { width: calc(100% - 40px); grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: clamp(8px, 2.5svh, 20px); padding: 4px 0 clamp(8px, 3svh, 24px); }
@@ -247,7 +247,7 @@ body:has(.trip-sheet:not([hidden])) .site-footer { display: none; }
 .station-info .service-day { font-size: 10px; }
 @media (max-width: 760px) and (min-height: 501px) {
   :root { --atlas-control-top: 0px; }
-  body:has(.home), .guide-page { --atlas-top-gap: 84px; }
+  .atlas-page { --atlas-top-gap: 84px; }
   .map-tools { left: 50%; transform: translateX(-50%); display: grid; justify-items: center; }
   .site-countdown { left: 50%; transform: translateX(-50%); }
   .map-modes { white-space: nowrap; }
@@ -256,7 +256,7 @@ body:has(.trip-sheet:not([hidden])) .site-footer { display: none; }
   .trip-sheet { left: 0; right: 0; width: 100%; max-height: min(62svh, calc(100svh - var(--header-height) - 50px)); padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px); }
 }
 @media (max-height: 500px) {
-  body:has(.home), .guide-page { --atlas-top-gap: 18px; }
+  .atlas-page { --atlas-top-gap: 18px; }
   .trip-sheet { max-height: calc(100svh - var(--header-height) - 44px); }
   .sheet-handle { min-height: 46px; }
   .map-tools:has(+ .trip-sheet:not([hidden])) .network-key { display: none; }

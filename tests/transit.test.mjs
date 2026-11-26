@@ -150,28 +150,36 @@ test('the transit map draws only the rail and ferry network, its status and town
   assert.doesNotMatch(road, /class="network|transit-town/);
 });
 
-test('switching modes keeps the previous artwork hidden until the selected image is ready', () => {
-  const road = '/assets/conamore-map.png', transit = '/assets/conamore-transit-terrain.webp';
-  const image = Object.assign(new EventTarget(), {
-    src: road, currentSrc: road, complete: true, naturalWidth: 1024, style: {},
-    getAttribute(key) { return this[key]; },
-  });
-  const show = setupMapArtwork(image, new AbortController().signal);
-  show('road');
-  assert.match(image.alt, /road map/);
-  show('transit');
-  assert.equal(image.src, transit);
-  image.dispatchEvent(new Event('load'));
-  assert.equal(image.style.visibility, 'hidden');
-  image.currentSrc = transit;
-  image.dispatchEvent(new Event('load'));
-  assert.equal(image.style.visibility, '');
-  assert.match(image.alt, /rail and ferry/);
-  show('road');
-  assert.equal(image.src, road);
-  assert.equal(image.style.visibility, 'hidden');
-  show('transit');
-  assert.equal(image.style.visibility, '');
+test('only a decoded, still-requested layer replaces the visible map', async () => {
+  function layer(hidden) {
+    let finishDecode;
+    const image = Object.assign(new EventTarget(), {
+      naturalWidth: 1024, complete: false,
+      decode: () => new Promise(resolve => { finishDecode = resolve; }),
+    });
+    return { hidden, querySelector: () => image, load: () => image.dispatchEvent(new Event('load')),
+      decoded: () => finishDecode() };
+  }
+  const road = layer(false), transit = layer(true);
+  const page = { querySelector: selector => selector === '.road-layer' ? road : transit };
+  const atlas = setupMapArtwork(page);
+  road.load();
+  road.decoded();
+  await Promise.resolve();
+  atlas.show('transit');
+  transit.load();
+  assert.deepEqual([road.hidden, transit.hidden], [false, true]);
+  atlas.show('road');
+  transit.decoded();
+  await Promise.resolve();
+  assert.deepEqual([road.hidden, transit.hidden], [false, true]);
+  atlas.show('transit');
+  assert.deepEqual([road.hidden, transit.hidden], [true, false]);
+  atlas.show('road');
+  assert.deepEqual([road.hidden, transit.hidden], [false, true]);
+  atlas.dispose();
+  atlas.show('transit');
+  assert.deepEqual([road.hidden, transit.hidden], [false, true]);
 });
 
 test('US City and Hollywood are 18 hours apart by road and have a through train via Flowertown', () => {
