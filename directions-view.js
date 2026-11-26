@@ -113,7 +113,7 @@ export function mapOverlay(mode, from, to, legs, extra) {
     for (const town of towns) {
       const served = hasStation(town.slug);
       const capital = town.slug === 'us-city';
-      const radius = capital ? 13 : served ? 7 : 4.5;
+      const radius = capital ? 13 : 7;
       const dot = `<circle class="transit-town${served ? ' station' : ''}" r="${radius}"/>`;
       const star = capital ? '<path fill="white" d="m0 -9 2.5 6.1 6.6.5-5 4.4 1.6 6.4L0 4-5.7 7.4-4.1 1-9.1-3.4l6.6-.5Z"/>' : '';
       markup.push(`<g transform="translate(${town.x} ${town.y})">${dot}${star}</g>`);

@@ -48,9 +48,10 @@ function fixture(t) {
   document.querySelector = () => ({ getBoundingClientRect: () => ({ top: 768 }) });
   Object.assign(globalThis, { document, window: new EventTarget(), innerWidth: 390, innerHeight: 844 });
   const navigations = [];
+  let directionsOpen = false;
   const dispose = setupCards(main, () => ({ title: 'Freetown', eyebrow: 'the eastern island', intro: 'An island junction.', url: '/travel-guide/freetown', link: 'explore' }), {
-    isChoosing: () => false, prepareCard() {}, station: () => '', onRefresh() {},
-    openTo: slug => navigations.push(slug),
+    isOpen: () => directionsOpen, station: () => '', onRefresh() {},
+    openTo: slug => { directionsOpen = true; navigations.push(slug); },
   });
   t.after(dispose);
   function fire(target, type, fields = {}) {
@@ -65,7 +66,7 @@ function fixture(t) {
     document.dispatchEvent(event);
     return event;
   }
-  return { card, hotspot, document, fire, outside, navigations };
+  return { card, hotspot, document, fire, outside, navigations, closeDirections() { directionsOpen = false; } };
 }
 
 for (const pointerType of ['touch', 'pen']) {
@@ -95,6 +96,8 @@ for (const pointerType of ['touch', 'pen']) {
 test('mouse hover still closes after leaving, and clicking pins both actions', t => {
   const f = fixture(t);
   f.fire(f.hotspot, 'pointerenter', { pointerType: 'mouse' });
+  assert.equal(f.card.hidden, true, 'a town appearing under a stationary pointer must not open');
+  f.fire(f.hotspot, 'pointermove', { pointerType: 'mouse' });
   assert.equal(f.card.hidden, false);
   f.fire(f.hotspot, 'pointerleave', { pointerType: 'mouse' });
   t.mock.timers.tick(221);
@@ -107,6 +110,21 @@ test('mouse hover still closes after leaving, and clicking pins both actions', t
   f.fire(f.card.directions, 'click');
   assert.deepEqual(f.navigations, ['freetown']);
   assert.equal(f.card.hidden, true);
+});
+
+test('open directions keep other town previews closed until the sheet is dismissed', t => {
+  const f = fixture(t);
+  f.fire(f.hotspot, 'click');
+  f.fire(f.card.directions, 'click');
+  for (const type of ['pointermove', 'focus', 'click']) {
+    f.fire(f.hotspot, type, { pointerType: 'mouse', detail: 0 });
+    assert.equal(f.card.hidden, true);
+    assert.equal(f.hotspot.attrs['aria-expanded'], 'false');
+  }
+  assert.deepEqual(f.navigations, ['freetown']);
+  f.closeDirections();
+  f.fire(f.hotspot, 'click');
+  assert.equal(f.card.hidden, false);
 });
 
 test('touch close control and keyboard Escape close pinned cards', t => {

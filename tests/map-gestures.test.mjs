@@ -29,3 +29,41 @@ test('map double taps, pinch gestures and zoom wheels are consumed while normal 
   assert.equal(fire('gesturestart',1800,false),false);
   assert.equal(fire('dblclick',1900,false),false);
 });
+
+function homeEntry(detail = 1) {
+  const root = new EventTarget();
+  let home = true;
+  root.querySelector = selector => selector === '.home' && home;
+  lockMapGestures(root);
+  function fire(type, fields = {}) {
+    const event = new Event(type, { cancelable: true });
+    const target = { closest: selector => home ? selector === 'a[href="/travel-guide"]' : selector === '.guide-page' };
+    Object.defineProperty(event, 'target', { value: target });
+    Object.assign(event, { clientX: 125, clientY: 150, button: 0, detail: 1, pointerType: 'mouse', ...fields });
+    root.dispatchEvent(event);
+    return event.defaultPrevented;
+  }
+  assert.equal(fire('click', { detail }), false);
+  home = false;
+  return fire;
+}
+
+test('entering the guide consumes residual clicks, focus and stationary pointer events, up to the next tap', () => {
+  const fire = homeEntry();
+  assert.equal(fire('pointermove'), true);
+  assert.equal(fire('focus'), true);
+  assert.equal(fire('click'), true);
+  assert.equal(fire('pointerdown', { pointerType: 'touch' }), false);
+  assert.equal(fire('click', { pointerType: 'touch' }), false);
+});
+
+test('a fresh mouse move, keyboard action or assistive activation can use the guide immediately', () => {
+  const mouse = homeEntry();
+  assert.equal(mouse('pointermove', { clientX: 140 }), false);
+  assert.equal(mouse('click'), false);
+  const keyboard = homeEntry(0);
+  assert.equal(keyboard('keydown', { key: 'Tab' }), false);
+  assert.equal(keyboard('focus'), false);
+  const assistive = homeEntry();
+  assert.equal(assistive('click', { detail: 0 }), false);
+});

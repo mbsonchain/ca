@@ -8,5 +8,5 @@
 .network.in-progress { stroke-width: 4.5; }
 .network.in-progress, .network-casing.in-progress { stroke-dasharray: 13 10; }
 .network-casing.in-progress { stroke-width: 8; }
-.transit-town { fill: #718078; stroke: #fff; stroke-width: 2.5; }
-.transit-town.station { fill: #18203b; stroke-width: 3; }
+.transit-town { fill: #718078; stroke: #fff; stroke-width: 3; }
+.transit-town.station { fill: #18203b; }
