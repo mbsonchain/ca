@@ -1,6 +1,5 @@
 import { places } from './places.js';
-import { collectionIntroduction, interviewArticle, interviewPath } from './collection.js';
-import { renderArticle } from './article.js';
+import { interviewPath, renderInterviewPage } from './collection.js';
 import { setupMapLabels } from './map-labels.js';
 import { setupCards } from './place-cards.js';
 import { homeClock, startCountdown } from './countdown.js';
@@ -32,64 +31,13 @@ function flowers() {
   </div>`;
 }
 
-function setupCollectionFlowers(collection) {
-  const layer = collection.querySelector('.mobile-flowers');
-  const article = collection.querySelector('.collection-content');
-  let active = true;
-  const arrange = () => {
-    if (!active) return;
-    if (!window.matchMedia('(max-width: 899px)').matches) {
-      layer.replaceChildren();
-      return;
-    }
-    const bounds = collection.getBoundingClientRect();
-    const logo = collection.querySelector('.collection-wordmark a').getBoundingClientRect();
-    const text = article.getBoundingClientRect();
-    const positions = [{ x: Math.min(logo.right - bounds.left + 5, bounds.width - 18), y: logo.bottom - bounds.top - 4, rotation: 12 }];
-    const breaks = [...article.querySelectorAll('h1, h2, p')].map(element => element.getBoundingClientRect());
-    const horizontal = [.78, .18, .62, .36, .86, .12];
-    const rotations = [-8, 12, -16, 9, 18, -6];
-    let previousY = positions[0].y;
-    let placed = 0;
-    for (let index = 0; index < breaks.length - 1; index++) {
-      const gap = breaks[index + 1].top - breaks[index].bottom;
-      const y = breaks[index].bottom - bounds.top + gap / 2;
-      // Use existing pauses in the text, leaving at least 180px between accents.
-      if (gap < 16 || y - previousY < 180) continue;
-      positions.push({ x: text.left - bounds.left + text.width * horizontal[placed % horizontal.length], y, rotation: rotations[placed % rotations.length] });
-      previousY = y;
-      placed++;
-    }
-    if (article.classList.contains('collection-introduction')) {
-      for (const [index, offset] of [[1, 8], [3, 4], [4, 8], [5, 8]]) {
-        if (positions[index]) positions[index].y -= offset;
-      }
-      positions.push({ x: text.left - bounds.left + text.width / 2, y: text.bottom - bounds.top + 32, rotation: -8 });
-    }
-    layer.innerHTML = positions.map(({ x, y, rotation }) => `<img src="/assets/conamore-flower.png" width="583" height="618" alt="" draggable="false" style="left:${x}px;top:${y}px;--flower-rotation:${rotation}deg">`).join('');
-  };
-  const observer = new ResizeObserver(arrange);
-  observer.observe(collection);
-  document.fonts.ready.then(arrange);
-  return () => { active = false; observer.disconnect(); };
-}
-
-function flowerColumnImages(count) {
-  return Array.from({ length: count }, (_, index) => `<img src="/assets/conamore-flower-sketch-${index % 5 + 1}.svg" alt="" draggable="false">`).join('');
-}
-
-function desktopFlowerColumn() {
-  const images = flowerColumnImages(5);
-  return ['left', 'right'].map(side => `<div class="desktop-flower-column desktop-flower-column--${side}" aria-hidden="true">${images}</div>`).join('');
-}
-
 function render({ focus = false } = {}) {
   cleanup();
   cleanup = () => {};
   const path = location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
   document.body.classList.toggle('fixed-map-page', ['/', '/travel-guide'].includes(path));
-  document.body.classList.toggle('collection-page', path === '/visit-conamore' || path === interviewPath);
-  document.body.classList.toggle('collection-landing-page', path === '/visit-conamore');
+  const isInterview = path === '/visit-conamore' || path === interviewPath;
+  document.body.classList.toggle('collection-page', isInterview);
   let section = '';
   if (path === '/') {
     document.title = 'CONAMORE';
@@ -127,34 +75,15 @@ function render({ focus = false } = {}) {
     const place = bySlug.get(path.split('/')[2]);
     document.title = `${place.name} — CONAMORE`;
     if (main.dataset.place !== place.slug) main.innerHTML = renderTown(place);
-  } else if (path === '/visit-conamore') {
-    section = 'collection';
-    document.title = 'Visit CONAMORE';
-    main.innerHTML = `${bar()}<section class="collection" aria-label="Visit CONAMORE">
-      <h1 class="collection-wordmark"><a href="/" aria-label="CONAMORE — home">CONAMORE</a></h1>
-      <article class="collection-content collection-introduction" aria-label="About the collection">
-        ${collectionIntroduction.map(paragraph => `<p>${escape(paragraph)}</p>`).join('')}
-        <p class="interview-invitation">Read the full interview <a href="${interviewPath}" aria-label="Read the full interview">here</a>.</p>
-      </article>
-      <div class="mobile-flowers" aria-hidden="true"></div>
-      ${desktopFlowerColumn()}
-    </section>`;
-  } else if (path === interviewPath) {
+  } else if (isInterview) {
     section = 'collection';
     document.title = 'Interview — CONAMORE';
-    main.innerHTML = `${bar()}<section class="collection" aria-label="Visit CONAMORE">
-      <h1 class="collection-wordmark"><a href="/" aria-label="CONAMORE — home">CONAMORE</a></h1>
-      <article class="collection-content interview-content" aria-label="Full interview">
-        ${renderArticle(interviewArticle, { highlightQuestions: false })}
-        <p class="interview-return"><a href="/visit-conamore">← visit CONAMORE</a></p>
-      </article>
-    </section>`;
+    if (!main.querySelector('.interview-content')) main.innerHTML = renderInterviewPage();
   } else {
     document.title = 'Not found — CONAMORE';
     main.innerHTML = `${bar()}<section class="not-found"><h1>off the map.</h1><p><a href="/travel-guide">back to the travel guide →</a></p></section>`;
   }
   main.removeAttribute('data-place');
-  if (path === '/visit-conamore') cleanup = setupCollectionFlowers(main.querySelector('.collection'));
   document.querySelectorAll('[data-nav]').forEach(a => {
     if (a.dataset.nav === section) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');

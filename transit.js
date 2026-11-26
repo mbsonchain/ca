@@ -30,13 +30,13 @@ const stationDwell = 8;
 
 // Terminal departures repeat on the Pacific clock. Ride times are in-world estimates.
 const services = [
-  { stops: ['amoreport', 'us-city', 'flowertown', 'hollywood'], rides: [200, 450, 510], first: [330, 345], last: [1290, 1305], every: 60 },
-  { stops: ['hollywood', 'santamore', 'formal-city'], rides: [365, 300], first: [365, 355], last: [1325, 1315], every: 60 },
+  { stops: ['amoreport', 'us-city', 'flowertown', 'hollywood'], rides: [130, 230, 270], first: [330, 345], last: [1290, 1305], every: 60 },
+  { stops: ['hollywood', 'santamore', 'formal-city'], rides: [245, 200], first: [365, 355], last: [1325, 1315], every: 60 },
   { stops: ['freeport', 'freetown'], rides: [150], first: [360, 390], last: [1320, 1350], every: 120 },
-  { stops: ['camporella', 'freeport'], rides: [450], first: [360, 410], last: [1170, 1220], every: 90 },
-  { stops: ['freetown', 'clifftown'], rides: [245], first: [345, 370], last: [1335, 1360], every: 45 },
-  { stops: ['freetown', 'sfida'], rides: [360], first: [380, 420], last: [1260, 1300], every: 80 },
-  { stops: ['goldpoint', 'greenpoint'], rides: [180], first: [390, 415], last: [1290, 1315], every: 45 },
+  { stops: ['camporella', 'freeport'], rides: [315], first: [360, 410], last: [1170, 1220], every: 90 },
+  { stops: ['freetown', 'clifftown'], rides: [165], first: [345, 370], last: [1335, 1360], every: 45 },
+  { stops: ['freetown', 'sfida'], rides: [270], first: [380, 420], last: [1260, 1300], every: 80 },
+  { stops: ['goldpoint', 'greenpoint'], rides: [120], first: [390, 415], last: [1290, 1315], every: 45 },
 ];
 
 const departures = new Map();
