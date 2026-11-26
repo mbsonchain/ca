@@ -1,9 +1,11 @@
 .network-layer.has-route { opacity: .52; }
 .network-casing { stroke: #fff; stroke-width: 10; stroke-opacity: .85; }
 .network { stroke-width: 6; }
-.network.train { stroke: #383269; }
+.guide-page { --rail-ink: #383269; }
+.network.train, .network.in-progress { stroke: var(--rail-ink); }
+.network-key span:first-child::before, .network-key span:nth-child(3)::before { border-color: var(--rail-ink); }
 .network.ferry, .network-casing.ferry { stroke-dasharray: 2 11; }
-.network.in-progress { stroke: #80532d; stroke-width: 4.5; }
+.network.in-progress { stroke-width: 4.5; }
 .network.in-progress, .network-casing.in-progress { stroke-dasharray: 13 10; }
 .network-casing.in-progress { stroke-width: 8; }
 .transit-town { fill: #718078; stroke: #fff; stroke-width: 2.5; }
