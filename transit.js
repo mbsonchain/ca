@@ -24,14 +24,17 @@ for (const edge of lines.filter(edge => edge.status === 'running')) {
   links.set(edge.to + '/' + edge.from, edge);
 }
 
-// Times are minutes after Pacific midnight. Each run keeps its identity at intermediate stops.
+export const dayMinutes = 24 * 60;
+const stationDwell = 8;
+
+// Terminal departures repeat on the Pacific clock. Ride times are in-world estimates.
 const services = [
-  { stops: ['amoreport', 'us-city', 'flowertown', 'hollywood'], rides: [17, 32, 29], first: [330, 345], last: [1290, 1305], every: 60 },
-  { stops: ['hollywood', 'santamore', 'formal-city'], rides: [33, 22], first: [365, 355], last: [1325, 1315], every: 60 },
-  { stops: ['camporella', 'freeport'], rides: [38], first: [360, 410], last: [1170, 1220], every: 90 },
-  { stops: ['freetown', 'clifftown'], rides: [18], first: [345, 370], last: [1335, 1360], every: 45 },
-  { stops: ['freetown', 'sfida'], rides: [32], first: [380, 420], last: [1260, 1300], every: 80 },
-  { stops: ['goldpoint', 'greenpoint'], rides: [16], first: [390, 415], last: [1290, 1315], every: 45 },
+  { stops: ['amoreport', 'us-city', 'flowertown', 'hollywood'], rides: [130, 230, 270], first: [330, 345], last: [1290, 1305], every: 60 },
+  { stops: ['hollywood', 'santamore', 'formal-city'], rides: [245, 200], first: [365, 355], last: [1325, 1315], every: 60 },
+  { stops: ['camporella', 'freeport'], rides: [315], first: [360, 410], last: [1170, 1220], every: 90 },
+  { stops: ['freetown', 'clifftown'], rides: [165], first: [345, 370], last: [1335, 1360], every: 45 },
+  { stops: ['freetown', 'sfida'], rides: [270], first: [380, 420], last: [1260, 1300], every: 80 },
+  { stops: ['goldpoint', 'greenpoint'], rides: [120], first: [390, 415], last: [1290, 1315], every: 45 },
 ];
 
 const departures = new Map();
@@ -50,23 +53,38 @@ for (const [service, definition] of services.entries()) {
       for (const [i, minutes] of rides.entries()) {
         const from = stops[i], to = stops[i + 1];
         const key = from + '/' + to;
-        const trip = { from, to, edge: links.get(key), departure, arrival: departure + minutes,
-          terminus: stops.at(-1), run: [service, direction, start].join('-') };
+        // Intermediate stops after midnight belong on the next calendar day's board.
+        const day = Math.floor(departure / dayMinutes);
+        const boardTime = departure % dayMinutes;
+        const trip = { from, to, edge: links.get(key), departure: boardTime, arrival: boardTime + minutes,
+          terminus: stops.at(-1), runKey: [service, direction, start].join('-'), originDay: -day };
         append(departures, key, trip);
         append(stations, from, trip);
-        departure = trip.arrival + 2;
+        departure += minutes + stationDwell;
       }
     }
   }
 }
 for (const events of [...departures.values(), ...stations.values()]) events.sort((a, b) => a.departure - b.departure);
 
-export function nextTrip(from, to, at) {
-  return departures.get(from + '/' + to)?.find(trip => trip.departure >= at);
+function occurrence(trip, day) {
+  const offset = day * dayMinutes;
+  return { from: trip.from, to: trip.to, edge: trip.edge, terminus: trip.terminus,
+    departure: trip.departure + offset, arrival: trip.arrival + offset,
+    run: trip.runKey + '@' + (day + trip.originDay) };
+}
+
+export function nextTrip(from, to, at, allowLaterDays = false) {
+  const trips = departures.get(from + '/' + to);
+  if (!trips?.length || (!allowLaterDays && at >= dayMinutes)) return;
+  const day = Math.floor(at / dayMinutes);
+  const next = trips.find(trip => trip.departure >= at % dayMinutes);
+  if (next) return occurrence(next, day);
+  if (allowLaterDays) return occurrence(trips[0], day + 1);
 }
 
 export function stationDepartures(slug, at) {
-  return (stations.get(slug) || []).filter(trip => trip.departure >= at);
+  return (stations.get(slug) || []).filter(trip => trip.departure >= at).map(trip => occurrence(trip, 0));
 }
 
 const pacificClock = new Intl.DateTimeFormat('en-US', {
@@ -83,7 +101,8 @@ export function serviceTime(date = new Date()) {
 export function clockTime(minute) {
   const hour = Math.floor(minute / 60) % 24;
   const label = (hour % 12 || 12) + ':' + String(minute % 60).padStart(2, '0') + (hour < 12 ? ' AM' : ' PM');
-  return minute >= 1440 ? label + ' (+1 day)' : label;
+  const days = Math.floor(minute / dayMinutes);
+  return days ? label + ' (+' + days + (days === 1 ? ' day)' : ' days)') : label;
 }
 export function duration(minutes) {
   const hours = Math.floor(minutes / 60), rest = minutes % 60;

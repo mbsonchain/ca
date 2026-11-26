@@ -54,7 +54,8 @@ function search(graph, from, to, at, closed) {
       if (at === null || edge.mode === 'road') {
         leg = { ...connection, departure: earliest, arrival: earliest + (edge.minutes ?? 1) };
       } else {
-        const trip = nextTrip(node, next, earliest);
+        // Start today. A trip already under way may need a connection on a later day.
+        const trip = nextTrip(node, next, earliest, node !== from);
         if (!trip) continue;
         leg = { ...trip, edge };
       }
