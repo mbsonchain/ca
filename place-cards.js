@@ -1,8 +1,9 @@
 import { setupCardDismissal } from './map-labels.js';
 
-const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+import { escape } from './town-page.js';
+import { updateMarkup } from './directions-view.js';
 
-export function setupCards(main, getContent, navigate, directions) {
+export function setupCards(main, getContent, directions) {
   const card = document.createElement('aside');
   card.id = 'place-card';
   card.className = 'place-card';
@@ -12,11 +13,15 @@ export function setupCards(main, getContent, navigate, directions) {
   let active = null;
   let pinned = false;
   let closeTimer;
-  let lastPointer = '';
   let suppressedFocus = false;
   const controller = new AbortController();
   const on = (target, type, callback) => target.addEventListener(type, callback, { signal: controller.signal });
   const cancelClose = () => clearTimeout(closeTimer);
+  function focusMarker(button) {
+    suppressedFocus = true;
+    button.focus({ preventScroll: true });
+    suppressedFocus = false;
+  }
   function close({ restoreFocus = false } = {}) {
     cancelClose();
     const old = active;
@@ -24,11 +29,7 @@ export function setupCards(main, getContent, navigate, directions) {
     card.hidden = true;
     active = null;
     pinned = false;
-    if (restoreFocus && old) {
-      suppressedFocus = true;
-      old.focus({ preventScroll: true });
-      suppressedFocus = false;
-    }
+    if (restoreFocus && old) focusMarker(old);
   }
   function scheduleClose() {
     cancelClose();
@@ -61,8 +62,17 @@ export function setupCards(main, getContent, navigate, directions) {
       active?.setAttribute('aria-expanded', 'false');
       active = button;
       const item = getContent(button);
-      card.innerHTML = `<button class="card-close" aria-label="Close preview">×</button><span class="eyebrow">${escape(item.eyebrow)}</span><h2>${escape(item.title)}</h2>${item.intro ? `<p>${escape(item.intro)}</p>` : ''}${item.url ? `<a href="${item.url}">${item.link}</a>` : ''}`;
+      card.innerHTML = `<button type="button" class="card-close" aria-label="Close preview">×</button>
+        <span class="eyebrow">${escape(item.eyebrow)}</span><h2>${escape(item.title)}</h2>
+        ${item.intro ? `<p>${escape(item.intro)}</p>` : ''}
+        <div class="card-actions"><button type="button" class="card-directions">Directions</button><a href="${item.url}">Explore</a></div>
+        <div class="station-info"></div>`;
       card.querySelector('.card-close').addEventListener('click', () => close({ restoreFocus: true }));
+      card.querySelector('.card-directions').addEventListener('click', () => {
+        close();
+        directions.openTo(button.dataset.place, () => focusMarker(button));
+      });
+      refreshStation();
       // Put the preview immediately after the active marker for keyboard navigation.
       button.after(card);
     }
@@ -70,21 +80,23 @@ export function setupCards(main, getContent, navigate, directions) {
     card.hidden = false;
     position();
   }
+  function refreshStation() {
+    if (!active || !directions) return;
+    updateMarkup(card.querySelector('.station-info'), directions.station(active.dataset.place));
+    position();
+  }
+  directions?.onRefresh(refreshStation);
+  card.addEventListener('toggle', position, { capture: true, signal: controller.signal });
   main.querySelectorAll('.hotspot').forEach(button => {
-    on(button, 'pointerenter', event => { if (event.pointerType === 'mouse') show(button); });
+    on(button, 'pointerenter', event => { if (event.pointerType === 'mouse' && !pinned) show(button); });
     on(button, 'pointerleave', event => { if (event.pointerType === 'mouse') scheduleClose(); });
-    on(button, 'pointerdown', event => { lastPointer = event.pointerType; });
     on(button, 'focus', () => { if (!suppressedFocus) show(button); });
     on(button, 'blur', scheduleClose);
     on(button, 'click', event => {
-      if (directions?.pick(button.dataset.place)) { close(); lastPointer = ''; return; }
-      const item = getContent(button);
-      if (lastPointer === 'mouse' && event.detail > 0 && item.url) navigate(item.url);
-      else {
-        show(button, true);
-        if (event.detail === 0) (card.querySelector('a') || card.querySelector('button')).focus();
-      }
-      lastPointer = '';
+      if (directions?.pick(button.dataset.place)) { close(); return; }
+      directions?.prepareCard();
+      show(button, true);
+      if (event.detail === 0) card.querySelector('.card-directions').focus();
     });
   });
   on(card, 'pointerenter', cancelClose);
@@ -92,7 +104,7 @@ export function setupCards(main, getContent, navigate, directions) {
   on(card, 'focusin', cancelClose);
   on(card, 'focusout', scheduleClose);
   const cleanDismissal = setupCardDismissal(card, close);
-  on(document, 'keydown', event => { if (event.key === 'Escape' && !card.hidden) { event.preventDefault(); close({ restoreFocus: card.contains(document.activeElement) }); } });
+  on(document, 'keydown', event => { if (event.key === 'Escape' && !event.defaultPrevented && !card.hidden) { event.preventDefault(); close({ restoreFocus: card.contains(document.activeElement) }); } });
   on(window, 'resize', position);
   on(window, 'scroll', position);
   return () => { cancelClose(); cleanDismissal(); controller.abort(); card.remove(); };

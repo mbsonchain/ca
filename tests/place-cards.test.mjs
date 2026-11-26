@@ -25,14 +25,21 @@ function fixture(t) {
     focus() { document.activeElement = this; this.dispatchEvent(new Event('focus')); }
     set innerHTML(value) {
       this.closeControl = new Element('close');
+      this.directions = new Element('directions');
+      this.station = new Element('station');
       this.link = new Element('link');
+      this.markup = value;
       this.append(this.closeControl);
       this.append(this.link);
+      this.append(this.directions);
     }
-    querySelector(selector) { return selector === 'a' ? this.link : this.closeControl; }
+    get ownerDocument() { return document; }
+    querySelectorAll() { return []; }
+    querySelector(selector) { return { a: this.link, '.card-close': this.closeControl, '.card-directions': this.directions, '.station-info': this.station }[selector]; }
   }
   const main = new Element('main');
   const hotspot = new Element('hotspot');
+  hotspot.dataset.place = 'freetown';
   main.append(hotspot);
   main.querySelectorAll = () => [hotspot];
   let card;
@@ -41,7 +48,10 @@ function fixture(t) {
   document.querySelector = () => ({ getBoundingClientRect: () => ({ top: 768 }) });
   Object.assign(globalThis, { document, window: new EventTarget(), innerWidth: 390, innerHeight: 844 });
   const navigations = [];
-  const dispose = setupCards(main, () => ({ title: 'Freetown', eyebrow: 'the eastern island', intro: 'An island junction.', url: '/travel-guide/freetown', link: 'explore' }), url => navigations.push(url));
+  const dispose = setupCards(main, () => ({ title: 'Freetown', eyebrow: 'the eastern island', intro: 'An island junction.', url: '/travel-guide/freetown', link: 'explore' }), {
+    isPicking: () => false, pick: () => false, prepareCard() {}, station: () => '', onRefresh() {},
+    openTo: slug => navigations.push(slug),
+  });
   t.after(dispose);
   function fire(target, type, fields = {}) {
     const event = new Event(type, { cancelable: true });
@@ -82,7 +92,7 @@ for (const pointerType of ['touch', 'pen']) {
   });
 }
 
-test('mouse hover still closes after leaving, and a mouse click still navigates', t => {
+test('mouse hover still closes after leaving, and clicking pins both actions', t => {
   const f = fixture(t);
   f.fire(f.hotspot, 'pointerenter', { pointerType: 'mouse' });
   assert.equal(f.card.hidden, false);
@@ -91,7 +101,12 @@ test('mouse hover still closes after leaving, and a mouse click still navigates'
   assert.equal(f.card.hidden, true);
   f.fire(f.hotspot, 'pointerdown', { pointerType: 'mouse' });
   f.fire(f.hotspot, 'click', { pointerType: 'mouse' });
-  assert.deepEqual(f.navigations, ['/travel-guide/freetown']);
+  assert.equal(f.card.hidden, false);
+  assert.match(f.card.markup, /href="\/travel-guide\/freetown">Explore/);
+  assert.deepEqual(f.navigations, []);
+  f.fire(f.card.directions, 'click');
+  assert.deepEqual(f.navigations, ['freetown']);
+  assert.equal(f.card.hidden, true);
 });
 
 test('touch close control and keyboard Escape close pinned cards', t => {
@@ -103,7 +118,7 @@ test('touch close control and keyboard Escape close pinned cards', t => {
   assert.equal(f.document.activeElement, f.hotspot);
   f.fire(f.hotspot, 'click', { detail: 0 });
   assert.equal(f.card.hidden, false);
-  assert.equal(f.document.activeElement, f.card.link);
+  assert.equal(f.document.activeElement, f.card.directions);
   f.fire(f.document, 'keydown', { key: 'Escape' });
   assert.equal(f.card.hidden, true);
 });
