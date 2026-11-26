@@ -10,12 +10,12 @@ test('Flowertown to Hollywood is direct in both directions and through trains st
   for (const [from, to] of [['hollywood', 'flowertown'], ['flowertown', 'hollywood']]) {
     const r = planTrip(from, to, 'transit', 320);
     assert.deepEqual(r.legs.map(leg => leg.to), [to]);
-    assert.equal(r.riding, 510);
+    assert.equal(r.riding, 270);
   }
   const r = planTrip('amoreport', 'hollywood', 'transit', 330);
   assert.deepEqual(r.legs.map(leg => leg.to), ['us-city', 'flowertown', 'hollywood']);
   assert.equal(itinerary(r.legs).length, 1);
-  assert.equal(r.riding, 200 + 450 + 510 + 16);
+  assert.equal(r.riding, 130 + 230 + 270 + 16);
   assert.equal(r.waiting, 0);
   assert.equal(r.total, r.driving + r.riding + r.waiting);
   assert.deepEqual(stationDepartures('open-city', 0), []);
@@ -82,7 +82,7 @@ test('both posted breaks match the atlas and force real detours while roads stay
   const crossing = planTrip('freetown', 'clifftown', 'road', 340);
   assert.equal(crossing.driving, 0);
   assert.equal(crossing.waiting, 5);
-  assert.equal(crossing.riding, 245);
+  assert.equal(crossing.riding, 165);
 });
 
 test('station boards and direction notices distinguish completed and planned service', () => {
@@ -101,12 +101,13 @@ test('station boards and direction notices distinguish completed and planned ser
 test('the eastern ferry and the desert road give the atlas its long-distance times', () => {
   const mainland = planTrip('freetown', 'formal-city', 'road', 380);
   assert.deepEqual(mainland.legs.map(leg => leg.to), ['sfida', 'east-fork', 'formal-city']);
-  assert.deepEqual([mainland.riding, mainland.driving, mainland.total], [360, 1020, 1380]);
+  assert.deepEqual([mainland.riding, mainland.driving, mainland.total], [270, 720, 990]);
   const drive = planTrip('formal-city', 'hollywood', 'road', 1320);
-  assert.equal(drive.driving, 720);
-  assert.equal(clockTime(drive.arrival), '10:00 AM (+1 day)');
+  assert.equal(drive.driving, 10 * 60);
+  assert.equal(clockTime(drive.arrival), '8:00 AM (+1 day)');
   const fullTrip = planTrip('freetown', 'hollywood', 'road', 380);
-  assert.equal(fullTrip.riding + fullTrip.driving, 2100);
+  assert.ok(fullTrip.legs.some(leg => leg.to === 'formal-city'));
+  assert.deepEqual([fullTrip.driving, fullTrip.riding, fullTrip.total], [22 * 60, 270, 26 * 60 + 30]);
 });
 
 test('a through train crosses midnight without changing runs or charging a transfer', () => {
@@ -115,23 +116,23 @@ test('a through train crosses midnight without changing runs or charging a trans
   assert.equal(new Set(result.legs.map(leg => leg.run)).size, 1);
   assert.equal(result.waiting, 0);
   assert.equal(itinerary(result.legs).length, 1);
-  assert.equal(result.total, 1176);
-  const boarding = stationDepartures('flowertown', 0).find(trip => trip.to === 'hollywood' && trip.departure === 516);
+  assert.equal(result.total, 646);
+  const boarding = stationDepartures('flowertown', 0).find(trip => trip.to === 'hollywood' && trip.departure === 226);
   assert.ok(boarding);
-  assert.equal(boarding.arrival, 1026);
+  assert.equal(boarding.arrival, 496);
   assert.equal(nextTrip('flowertown', 'hollywood', 1440), undefined);
 });
 
 test('the northern closure detour can catch ferries on later days without listing their timetables', () => {
   const route = planTrip('amoreport', 'camporella', 'road', 520);
   assert.equal(route.status, 'ok');
-  assert.ok(route.arrival > 3 * 1440);
+  assert.equal(Math.floor(route.arrival / 1440), 2);
   assert.equal(route.total, route.waiting + route.driving + route.riding);
   assert.ok(route.legs.filter(l => l.edge.mode === 'ferry').every(l => l.departure >= 1440));
   const html = routeResult('amoreport', 'camporella', 'road', route, { day: 'Sun' }, []);
-  assert.match(html, /\(\+3 days\)/);
+  assert.match(html, /\(\+2 days\)/);
   assert.match(html, /on day 3/);
-  assert.match(html, /Day 4 ·/);
+  assert.match(html, /Day 3 ·/);
   assert.deepEqual(stationDepartures('camporella', 1440), []);
 });
 
@@ -173,12 +174,11 @@ test('switching modes keeps the previous artwork hidden until the selected image
   assert.equal(image.style.visibility, '');
 });
 
-test('US City to Hollywood takes a full day on the road and a long through train via Flowertown', () => {
-  const drive = planTrip('us-city', 'hollywood', 'road', 360);
-  assert.equal(drive.driving, 24 * 60);
+test('US City and Hollywood are 18 hours apart by road and have a through train via Flowertown', () => {
   for (const [from, to] of [['us-city', 'hollywood'], ['hollywood', 'us-city']]) {
+    assert.equal(planTrip(from, to, 'road', 360).driving, 18 * 60);
     const rail = planTrip(from, to, 'transit', 360);
-    assert.equal(rail.riding, 16 * 60 + 8);
+    assert.equal(rail.riding, 8 * 60 + 28);
     assert.deepEqual(itinerary(rail.legs).map(step => step.stops), [[from, 'flowertown', to]]);
   }
 });
@@ -189,7 +189,7 @@ test('the island train runs every two hours in both directions and connects the 
     assert.ok(departures.every(trip => trip.to === to && trip.arrival - trip.departure === 150));
     assert.deepEqual(departures.map(trip => trip.departure), Array.from({ length: 9 }, (_, i) => first + 120 * i));
     assert.equal(planTrip(from, to, 'transit', first).total, 150);
-    assert.equal(planTrip(from, to, 'road', first).driving, 210);
+    assert.equal(planTrip(from, to, 'road', first).driving, 135);
   }
   assert.deepEqual(planTrip('camporella', 'sfida', 'transit', 360).legs.map(leg => leg.edge.mode), ['ferry', 'train', 'ferry']);
 });

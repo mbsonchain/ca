@@ -1,18 +1,5 @@
-// Introduction supplied by Matteo; preserve the wording and paragraph order.
-export const collectionIntroduction = [
-  "Matteo Salvadei has spent the last three years drawing a map of a place he sometimes finds without leaving his balcony.",
-  "He calls it CONAMORE. He has been there in Kapaa and Trieste, on walks with no particular destination and, recently, at a market in Amsterdam.",
-  "A fisherman was selling oysters he had gathered himself. The big ones and the small ones cost the same. Salvadei wanted to know why.",
-  "The man laughed. He had to bend down once for a small one, he explained, and once for a big one.",
-  "“‘It’s the native way,’ he told me. I remember I felt so Western,” Salvadei jokes.",
-  "The rain had stopped. The fisherman was shucking oysters behind his stand. People were enjoying their day.",
-  "“These things are so ordinary, but if you look a little closer, all of a sudden they’re magical.”",
-  "CONAMORE, Salvadei says, is about bringing back “something that we’ve lost.”",
-  "Asked what he thinks people have lost, he says, “We don't see the magic anymore. It's hard to. And if you can't see it, you can't carry it with you. So it slowly diminishes.”",
-  "In CONAMORE, the fisherman belongs as much as the painter. Love knows no bounds.",
-  "Magic is everywhere.",
-  "After all this talk of what he hopes CONAMORE will give other people, what has it already given him?"
-];
+import { renderArticle } from './article.js';
+import { bar } from './town-page.js';
 
 export const interviewPath = '/visit-conamore/conamore-is-a-place';
 
@@ -78,3 +65,12 @@ export const interviewArticle = {
     }
   ]
 };
+
+export function renderInterviewPage() {
+  return `${bar()}<section class="collection" aria-label="Visit CONAMORE">
+    <h1 class="collection-wordmark"><a href="/" aria-label="CONAMORE — home">CONAMORE</a></h1>
+    <article class="collection-content interview-content" aria-label="Full interview">
+      ${renderArticle(interviewArticle, { highlightQuestions: false })}
+    </article>
+  </section>`;
+}

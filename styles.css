@@ -24,18 +24,13 @@ body:has(.home), .guide-page {
   --atlas-usable-height: calc(100svh - var(--header-height) - var(--footer-height) - var(--atlas-top-gap) - var(--atlas-bottom-gap));
   --guide-map-width: min(calc(var(--atlas-usable-height) * 2 / 3), calc(100vw - 2 * var(--map-gutter)));
 }
-body:has(.home) {
-  /* The first painted tip is 21px below the top of the 1024px-wide atlas. */
-  --gap-to-map: calc(var(--atlas-top-gap) + (var(--atlas-usable-height) - var(--guide-map-width) * 1.5) / 2 + var(--guide-map-width) * 21 / 1024);
-  --clock-center: calc(var(--header-height) + var(--gap-to-map) / 2);
-}
 .home { height: 100svh; min-height: 0; display: grid; place-items: center; padding: calc(var(--header-height) + var(--atlas-top-gap)) var(--map-gutter) calc(var(--footer-height) + var(--atlas-bottom-gap)); position: relative; }
 .home-map-link { display: block; width: var(--guide-map-width); aspect-ratio: 2 / 3; min-height: 0; }
 .home-map { height: 100%; width: 100%; object-fit: contain; min-height: 0; }
 .wordmark { position: absolute; left: 50%; top: calc(50% + (var(--header-height) + var(--atlas-top-gap) - var(--footer-height) - var(--atlas-bottom-gap)) / 2 - var(--guide-map-width) * .06); transform: translate(-50%, -50%); width: 100%; text-align: center; font: 900 clamp(46px, 12.2vw, 210px)/1 'articulat-heavy-cf', var(--sans); letter-spacing: -.045em; padding-right: .045em; white-space: nowrap; pointer-events: none; }
 .wordmark a { display: inline-block; pointer-events: auto; color: var(--ink); }
 .site-footer { position: fixed; bottom: 0; left: 0; right: 0; height: var(--footer-height); display: grid; align-content: end; justify-items: center; row-gap: 8px; padding: 0 20px var(--footer-bottom); background: #fff; z-index: 20; }
-.site-countdown { position: fixed; top: var(--clock-center, calc(var(--header-height) + 24px)); left: var(--atlas-control-left); transform: translateY(-50%); font-size: 14px; line-height: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.site-countdown { position: fixed; top: calc(var(--header-height) + var(--atlas-control-top)); left: var(--atlas-control-left); display: grid; align-items: center; min-height: var(--atlas-control-height); font-size: 14px; line-height: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .site-footer nav { display: flex; justify-content: center; gap: clamp(30px, 5vw, 72px); }
 .site-footer a { min-height: 44px; display: inline-flex; align-items: center; padding: 5px 0; }
 .site-footer a[aria-current='page'], .page-bar a[aria-current='page'] { color: var(--pink); text-decoration: none; }
@@ -103,15 +98,10 @@ main:has(.detail) { height: calc(100svh - var(--footer-height)); display: grid; 
 .collection { position: relative; min-height: calc(100svh - var(--header-height)); display: grid; grid-template-rows: auto auto; align-content: start; justify-items: center; gap: clamp(32px, 4svh, 48px); padding: 16px 32px calc(var(--footer-height) + 40px); }
 .collection-wordmark { position: relative; width: var(--article-width); text-align: center; font: 900 clamp(42px, 7vw, 92px)/1 'articulat-heavy-cf', var(--sans); letter-spacing: -.045em; white-space: nowrap; }
 .collection-wordmark a { display: inline-block; padding-right: .045em; color: var(--ink); }
-.mobile-flowers, .desktop-flower-column { display: none; }
 /* Static editorial content uses normal page flow, with no inner scroll region. */
 .collection-content { position: relative; width: var(--article-width); margin: 0; font: 400 var(--article-font-size)/1.75 var(--mono); overflow-wrap: anywhere; }
 .collection-content p { margin-bottom: 1.2em; }
 .collection-content p:last-child { margin-bottom: 0; }
-.interview-invitation { margin-top: 2em; }
-.interview-invitation a, .interview-invitation a:hover, .interview-invitation a:focus-visible { color: var(--pink); font-weight: 400; }
-.interview-return { margin-top: 3em; }
-.interview-return a { color: var(--pink); }
 .collection-intro { font: inherit; }
 .collection-content mark { color: inherit; background: linear-gradient(102deg, transparent 1%, #f6dfed 3%, #f6dfed 97%, transparent 99%) 0 60% / 100% 88% no-repeat; padding: .03em .12em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .article-title { font: inherit; font-weight: 700; margin: 0 0 2.5em; }
@@ -120,32 +110,6 @@ main:has(.detail) { height: calc(100svh - var(--footer-height)); display: grid; 
 .article-question { font: inherit; font-weight: 700; margin: 0 0 1.4em; white-space: pre-line; }
 .article-quote { margin: 2.5em 0; padding-left: 22px; border-left: 2px solid var(--pink); font: inherit; }
 .article-quote cite { display: block; font: inherit; }
-/* Fit the introduction between the desktop navigation bars, with even gaps. */
-@media (min-width: 900px) {
-  .desktop-flower-column { display: grid; grid-template-rows: repeat(5, minmax(0, 1fr)); align-items: center; position: absolute; top: 16px; bottom: 20px; width: clamp(24px, calc((100vw - var(--article-width)) / 2 - 24px), 88px); pointer-events: none; user-select: none; }
-  .desktop-flower-column--right { right: calc((100vw - var(--article-width)) / 4); transform: translateX(50%); }
-  .desktop-flower-column--left { left: calc((100vw - var(--article-width)) / 4); transform: translateX(-50%); }
-  .desktop-flower-column img { width: 100%; height: 100%; max-height: min(11svh, 100px); object-fit: contain; }
-  .desktop-flower-column--left img { transform: scaleX(-1); }
-  .collection-landing-page .collection { min-height: calc(100svh - var(--header-height) - var(--footer-height)); grid-template-rows: auto 1fr; padding-bottom: 20px; }
-  .collection-introduction { display: flex; flex-direction: column; justify-content: space-between; gap: 4px; }
-  .collection-introduction p { margin: 0; }
-}
-@media (min-width: 900px) and (max-width: 1100px) {
-  .collection-introduction { line-height: 1.6; gap: 2px; }
-}
-@media (min-width: 900px) and (max-height: 760px) {
-  .collection-landing-page .collection { gap: 24px; padding-top: 8px; padding-bottom: 12px; }
-  .collection-introduction { line-height: 1.6; gap: 2px; }
-}
-@media (min-width: 900px) and (max-width: 1100px) and (max-height: 760px) {
-  .collection-introduction { line-height: 1.4; }
-}
-@media (max-width: 899px) {
-  .collection-landing-page .collection { padding-bottom: calc(var(--footer-height) + 72px); }
-  .mobile-flowers { display: block; position: absolute; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; user-select: none; }
-  .mobile-flowers img { position: absolute; width: 26px; filter: url(#flower-soft-ink); transform: translate(-50%, -50%) rotate(var(--flower-rotation)); }
-}
 .no-script, .not-found { padding: 120px 30px; text-align: center; }
 @media (max-width: 640px) {
   :root { --header-height: 64px; --footer-bottom: max(3px, env(safe-area-inset-bottom, 0px)); --footer-height: calc(73px + var(--footer-bottom)); --map-gutter: 5px; }
@@ -212,9 +176,10 @@ body:has(.home), body:has(.guide-page), body:has(.detail) { --footer-height: cal
 .closed-mark path { stroke: #84383a; stroke-width: 3; }
 .detail-directions { display: inline-block; margin-top: 15px; text-decoration: underline; text-underline-offset: 3px; }
 
-:root { --atlas-control-left: clamp(14px, 2.3vw, 32px); }
-.map-tools { position: absolute; z-index: 15; left: var(--atlas-control-left); top: 4px; }
-.map-modes { display: inline-flex; align-items: center; padding: 3px; border: 1px solid #c6c4c2; border-radius: 24px; background: white; }
+:root { --atlas-control-left: clamp(14px, 2.3vw, 32px); --atlas-control-top: 4px; --atlas-control-height: 40px; }
+.map-tools { position: absolute; z-index: 15; left: var(--atlas-control-left); top: var(--atlas-control-top); }
+.map-tools, .trip-sheet, :is(.map-tools, .trip-sheet) button { text-transform: lowercase; }
+.map-modes { display: inline-flex; align-items: center; min-height: var(--atlas-control-height); padding: 3px; border: 1px solid #c6c4c2; border-radius: 24px; background: white; }
 .map-modes button { min-height: 32px; padding: 0 14px; border-radius: 20px; line-height: 1; }
 .map-modes button[aria-pressed='true'] { background: var(--ink); color: white; }
 .network-key { display: flex; gap: 9px; align-items: center; justify-content: center; padding: 4px 0; width: max-content; background: #fffe; font-size: 10px; }
@@ -281,9 +246,10 @@ body:has(.trip-sheet:not([hidden])) .site-footer { display: none; }
 .station-info .departure-group { margin: 5px 0; line-height: 1.45; }
 .station-info .service-day { font-size: 10px; }
 @media (max-width: 760px) and (min-height: 501px) {
+  :root { --atlas-control-top: 0px; }
   body:has(.home), .guide-page { --atlas-top-gap: 84px; }
-  .map-tools { top: 0; left: 50%; transform: translateX(-50%); display: grid; justify-items: center; }
-  .site-countdown { left: 50%; transform: translate(-50%, -50%); }
+  .map-tools { left: 50%; transform: translateX(-50%); display: grid; justify-items: center; }
+  .site-countdown { left: 50%; transform: translateX(-50%); }
   .map-modes { white-space: nowrap; }
 }
 @media (max-width: 760px) {
