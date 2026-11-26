@@ -3,6 +3,9 @@
   "outputDirectory": "dist",
   "framework": null,
   "cleanUrls": true,
-  "redirects": [{ "source": "/travel-guide/sfsga", "destination": "/travel-guide/sfiga", "permanent": true }],
+  "redirects": [
+    { "source": "/travel-guide/sfsga", "destination": "/travel-guide/orangepoint", "permanent": true },
+    { "source": "/travel-guide/sfiga", "destination": "/travel-guide/orangepoint", "permanent": true }
+  ],
   "headers": [{ "source": "/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }]
 }

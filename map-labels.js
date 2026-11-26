@@ -35,6 +35,7 @@ export function setupMapLabels(page, { visible = false, onChange = () => {} } = 
   const on = (target, type, callback) => target.addEventListener(type, callback, { signal: controller.signal });
   let pixels;
   let disposed = false;
+  let picking = false;
   function readMap() {
     if (!map.naturalWidth) return;
     const sample = document.createElement('canvas');
@@ -44,29 +45,31 @@ export function setupMapLabels(page, { visible = false, onChange = () => {} } = 
     pixels.drawImage(map, 0, 0);
   }
   function positionLabels() {
-    if (!visible || disposed) return;
+    if (labels.hidden || disposed) return;
     const bounds = canvas.getBoundingClientRect();
     labels.querySelectorAll('.map-label').forEach(label => {
       const width = label.offsetWidth;
       const anchor = Number(label.dataset.x) / 1024 * bounds.width;
-      const preferred = label.dataset.side === 'left' ? anchor - width - 8 : anchor + 8;
+      const gap = label.dataset.label === 'santamore' ? 1 : 8;
+      const preferred = label.dataset.side === 'left' ? anchor - width - gap : anchor + gap;
       // Keep names on screen even when their preferred side is outside the map.
       const left = Math.max(8 - bounds.left, Math.min(innerWidth - 8 - bounds.left - width, preferred));
       label.style.left = `${left}px`;
     });
   }
   function update() {
-    labels.hidden = !visible;
-    background.setAttribute('aria-pressed', String(visible));
+    labels.hidden = !(visible || picking);
+    background.setAttribute('aria-pressed', String(!labels.hidden));
     positionLabels();
   }
   function toggle(event) {
-    if (event?.defaultPrevented) return;
+    if (event?.defaultPrevented || picking) return;
     visible = !visible;
     update();
     onChange(visible);
   }
   on(background, 'click', toggle);
+  on(page, 'route-picking', event => { picking = event.detail; update(); });
   on(map, 'load', readMap);
   on(map, 'click', event => {
     if (event.defaultPrevented || !pixels) return;

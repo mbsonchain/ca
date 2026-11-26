@@ -2,7 +2,7 @@ import { setupCardDismissal } from './map-labels.js';
 
 const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-export function setupCards(main, getContent, navigate) {
+export function setupCards(main, getContent, navigate, directions) {
   const card = document.createElement('aside');
   card.id = 'place-card';
   card.className = 'place-card';
@@ -54,6 +54,7 @@ export function setupCards(main, getContent, navigate) {
     card.style.top = `${Math.max(margin, Math.min(innerHeight - h - margin, top))}px`;
   }
   function show(button, pin = false) {
+    if (directions?.isPicking()) return;
     cancelClose();
     pinned = active === button ? pinned || pin : pin;
     if (active !== button) {
@@ -76,6 +77,7 @@ export function setupCards(main, getContent, navigate) {
     on(button, 'focus', () => { if (!suppressedFocus) show(button); });
     on(button, 'blur', scheduleClose);
     on(button, 'click', event => {
+      if (directions?.pick(button.dataset.place)) { close(); lastPointer = ''; return; }
       const item = getContent(button);
       if (lastPointer === 'mouse' && event.detail > 0 && item.url) navigate(item.url);
       else {
