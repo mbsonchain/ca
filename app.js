@@ -1,70 +1,41 @@
-import { places } from './places.js';
+import { mountAtlas } from './atlas.js';
 import { interviewPath, renderInterviewPage } from './collection.js';
 import { setupMapLabels } from './map-labels.js';
 import { setupCards } from './place-cards.js';
 import { homeClock, startCountdown } from './countdown.js';
-import { bar, bySlug, escape, mapImage, placeUrl, renderTown } from './town-page.js';
-import { directionsControls, setupDirections } from './directions.js';
+import { bar, bySlug, placeUrl, renderTown } from './town-page.js';
+import { setupDirections, setupMapArtwork } from './directions.js';
 import { lockMapGestures } from './map-gestures.js';
 
 const main = document.querySelector('#main');
 let cleanup = () => {};
-
-function mapLabel(place) {
-  const left = ['amoretown', 'flowertown', 'open-city'].includes(place.slug);
-  const below = ['sfida', 'orangepoint', 'clifftown'].includes(place.slug);
-  const side = below ? 'below' : left ? 'left' : 'right';
-  const dy = below ? 7 : ({ laketown: 6, santamore: 10, amoretown: -9, greenpoint: -8 }[place.slug] || 0);
-  const name = escape(place.name).replace('Sunset Cliffs', 'Sunset<br>Cliffs');
-  return `<span class="map-label" data-label="${place.slug}" data-x="${place.x}" data-side="${side}" style="top:calc(${place.y / 1536 * 100}% + ${dy}px)">${name}</span>`;
-}
-
-function flowers() {
-  const flower = position => {
-    const image = '<img src="/assets/conamore-flower.png" width="583" height="618" alt="" draggable="false">';
-    const className = `side-flower side-flower--${position}`;
-    return `<a class="${className}" href="/visit-conamore" aria-label="Visit CONAMORE">${image}</a>`;
-  };
-  return `<div class="side-flowers guide-flowers">
-    <div class="flower-side flower-side--left">${flower('one')}${flower('two')}</div>
-    <div class="flower-side flower-side--right">${flower('three')}${flower('four')}</div>
-  </div>`;
-}
+let artwork;
 
 function render({ focus = false } = {}) {
   cleanup();
   cleanup = () => {};
   const path = location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
-  document.body.classList.toggle('fixed-map-page', ['/', '/travel-guide'].includes(path));
+  const home = path === '/';
+  const atlas = home || path === '/travel-guide' ? mountAtlas(main, home) : null;
+  document.body.classList.toggle('fixed-map-page', Boolean(atlas));
+  if (atlas && !artwork) artwork = setupMapArtwork(atlas);
+  if (!atlas && artwork) { artwork.dispose(); artwork = null; }
   const isInterview = path === '/visit-conamore' || path === interviewPath;
   document.body.classList.toggle('collection-page', isInterview);
   let section = '';
-  if (path === '/') {
+  if (home) {
+    artwork.show('road');
     document.title = 'CONAMORE';
     const footer = document.querySelector('.site-footer');
     if (!footer.querySelector('.site-countdown')) footer.insertAdjacentHTML('afterbegin', homeClock);
     const clock = footer.querySelector('.site-countdown');
     const stopClock = startCountdown(clock);
     cleanup = () => { stopClock(); clock.remove(); };
-    main.innerHTML = `${bar({ home: true })}<section class="home"><a class="home-map-link" href="/travel-guide" aria-label="Explore the CONAMORE travel guide"><img class="home-map" src="${mapImage}" width="1024" height="1536" alt="The map of CONAMORE, with green hills, mountain roads, blue lakes and a golden desert." fetchpriority="high"></a><h1 class="wordmark"><a href="/travel-guide">CONAMORE</a></h1></section>`;
-  } else if (path === '/travel-guide') {
+  } else if (atlas) {
     section = 'guide';
     document.title = 'Travel guide — CONAMORE';
-    main.innerHTML = `${bar()}<div class="guide-page"><h1 class="sr-only">travel guide</h1>
-      <button class="guide-background" aria-label="Show place names" aria-pressed="false" aria-controls="map-labels"></button>
-      ${flowers()}
-      ${directionsControls()}
-      <section class="map-stage" aria-label="Explore the places of CONAMORE">
-        <div class="map-canvas">
-          <img class="map-image" src="${mapImage}" width="1024" height="1536" alt="CONAMORE travel map. Hover, focus or tap a location to find out more.">
-          <svg class="route-overlay" viewBox="0 0 1024 1536" aria-hidden="true"></svg>
-          ${places.filter(p => !p.area).map(p => `<button class="hotspot" style="--x:${p.x / 1024 * 100}%;--y:${p.y / 1536 * 100}%" data-place="${p.slug}" aria-label="${escape(p.name)}" aria-expanded="false" aria-controls="place-card"></button>`).join('')}
-          <div id="map-labels" class="map-labels" aria-hidden="true" hidden>${places.filter(p => !p.area).map(mapLabel).join('')}</div>
-        </div>
-      </section></div>`;
-    const guide = main.querySelector('.guide-page');
-    const cleanLabels = setupMapLabels(guide);
-    const directions = setupDirections(guide);
+    const cleanLabels = setupMapLabels(atlas);
+    const directions = setupDirections(atlas, artwork);
     const cleanCards = setupCards(main, button => {
       const p = bySlug.get(button.dataset.place);
       return { title: p.name, intro: p.intro, eyebrow: p.region, url: placeUrl(p) };

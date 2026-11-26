@@ -13,13 +13,14 @@ function fixture(t, viewport = 1000) {
   Object.assign(map, { complete: true, naturalWidth: 1024, naturalHeight: 1536, getBoundingClientRect: () => bounds });
   let pixel = [255, 255, 255, 255];
   let sampled;
-  const context = { drawImage() {}, getImageData(x, y) { sampled = [x, y]; return { data: pixel }; } };
+  let drawn;
+  const context = { drawImage(image) { drawn = image; }, getImageData(x, y) { sampled = [x, y]; return { data: pixel }; } };
   const names = [
     { dataset: { x: '46', side: 'left' }, offsetWidth: 60, style: {} },
     { dataset: { x: '854', side: 'right' }, offsetWidth: 54, style: {} },
   ];
   const labels = { hidden: true, querySelectorAll: () => names };
-  const canvas = { getBoundingClientRect: () => bounds };
+  const canvas = Object.assign(new EventTarget(), { getBoundingClientRect: () => bounds });
   const selectors = { '.guide-background': background, '.map-image': map, '.map-labels': labels, '.map-canvas': canvas };
   globalThis.document = { createElement: () => ({ getContext: () => context }), fonts: { ready: Promise.resolve() } };
   globalThis.innerWidth = viewport;
@@ -29,13 +30,14 @@ function fixture(t, viewport = 1000) {
   const page = Object.assign(new EventTarget(), { querySelector: selector => selectors[selector] });
   const dispose = setupMapLabels(page, { onChange: value => changes.push(value) });
   t.after(dispose);
-  function clickMap(color) {
+  function clickMap(color, image = map) {
     pixel = color;
     const event = new Event('click');
     Object.assign(event, { clientX: bounds.left + bounds.width / 2, clientY: bounds.top + bounds.height / 2 });
-    map.dispatchEvent(event);
+    Object.defineProperty(event, 'target', { value: { closest: () => image } });
+    canvas.dispatchEvent(event);
   }
-  return { background, attributes, labels, names, changes, bounds, clickMap, dispose, sampled: () => sampled, disconnected: () => disconnected };
+  return { background, attributes, labels, names, changes, bounds, map, clickMap, dispose, drawn: () => drawn, sampled: () => sampled, disconnected: () => disconnected };
 }
 
 test('paper detection matches the display filter without toggling on colored terrain', () => {
@@ -58,6 +60,17 @@ test('background activates names; white pixels toggle them; terrain leaves them 
   assert.equal(f.labels.hidden, true);
   f.clickMap([255, 255, 255, 255]);
   assert.deepEqual(f.changes, [true, false, true]);
+});
+
+test('map paper is sampled from the visible artwork and only on demand', t => {
+  const f = fixture(t);
+  const transit = { naturalWidth: 1024, naturalHeight: 1536, getBoundingClientRect: () => f.bounds };
+  assert.equal(f.drawn(), undefined);
+  f.clickMap([255, 255, 255, 255]);
+  assert.equal(f.drawn(), f.map);
+  f.clickMap([255, 255, 255, 255], transit);
+  assert.equal(f.drawn(), transit);
+  assert.equal(f.labels.hidden, true);
 });
 
 test('western and eastern labels stay on screen on narrow maps', t => {

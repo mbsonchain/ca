@@ -1,6 +1,7 @@
 import { mkdir, copyFile, cp, readFile, writeFile, rm } from 'node:fs/promises';
 import { places } from '../places.js';
 import { renderTown, escape } from '../town-page.js';
+import { renderAtlas } from '../atlas.js';
 import { homeClock } from '../countdown.js';
 import { interviewPath, renderInterviewPage } from '../collection.js';
 
@@ -8,10 +9,13 @@ import { interviewPath, renderInterviewPage } from '../collection.js';
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist/travel-guide', { recursive: true });
 await mkdir('dist/visit-conamore', { recursive: true });
-for (const file of ['app.js', 'places.js', 'collection.js', 'article.js', 'map-labels.js', 'place-cards.js', 'countdown.js', 'road-network.js', 'routes.js', 'transit.js', 'town-page.js', 'directions.js', 'directions-view.js', 'map-gestures.js', 'styles.css', 'mobile-preview.html', 'desktop-preview.html']) await copyFile(file, `dist/${file}`);
+for (const file of ['app.js', 'atlas.js', 'places.js', 'collection.js', 'article.js', 'map-labels.js', 'place-cards.js', 'countdown.js', 'road-network.js', 'routes.js', 'transit.js', 'town-page.js', 'directions.js', 'directions-view.js', 'map-gestures.js', 'styles.css', 'mobile-preview.html', 'desktop-preview.html']) await copyFile(file, `dist/${file}`);
 await cp('assets', 'dist/assets', { recursive: true });
 const html = await readFile('index.html', 'utf8');
-await writeFile('dist/index.html', html.replace('<footer class="site-footer">', '<footer class="site-footer">' + homeClock));
+const staticAtlas = (shell, home) => shell.replace('<body>', '<body class="fixed-map-page">')
+  .replace('<main id="main" tabindex="-1"></main>', () => `<main id="main" tabindex="-1">${renderAtlas(home)}</main>`);
+await writeFile('dist/index.html', staticAtlas(html, true)
+  .replace('<footer class="site-footer">', '<footer class="site-footer">' + homeClock));
 const pages = [
   { slug: 'travel-guide', title: 'Travel guide' },
   { slug: 'visit-conamore', title: 'Interview', interview: true },
@@ -21,7 +25,9 @@ const pages = [
 ];
 for (const page of pages) {
   let content = html.replace('<title>CONAMORE</title>', `<title>${escape(page.title)} — CONAMORE</title>`);
-  if (page.place) {
+  if (page.slug === 'travel-guide') {
+    content = staticAtlas(content, false).replace('data-nav="guide"', 'data-nav="guide" aria-current="page"');
+  } else if (page.place) {
     content = content.replace('<main id="main" tabindex="-1"></main>',
       `<main id="main" tabindex="-1" data-place="${page.place.slug}">${renderTown(page.place)}</main>`)
       .replace('data-nav="guide"', 'data-nav="guide" aria-current="page"')

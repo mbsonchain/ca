@@ -8,7 +8,7 @@ export const escape = value => String(value).replace(/[&<>"']/g, c => ({
 })[c]);
 
 export function bar({ home = false } = {}) {
-  return `<header class="page-bar${home ? ' home-bar' : ''}"><nav aria-label="Site navigation"><a href="/"${home ? ' aria-current="page"' : ''}>home</a><a href="https://desertformal.com">FORMAL</a><a href="https://strikeout.us">strikeout</a></nav></header>`;
+  return `<header class="page-bar"><nav aria-label="Site navigation"><a href="/"${home ? ' aria-current="page"' : ''}>home</a><a href="https://desertformal.com">FORMAL</a><a href="https://strikeout.us">strikeout</a></nav></header>`;
 }
 
 export function renderTown(place) {

@@ -41,21 +41,22 @@ export function setupCardDismissal(card, close, root = document) {
 
 export function setupMapLabels(page, { visible = false, onChange = () => {} } = {}) {
   const background = page.querySelector('.guide-background');
-  const map = page.querySelector('.map-image');
   const canvas = page.querySelector('.map-canvas');
   const labels = page.querySelector('.map-labels');
   const controller = new AbortController();
   const on = (target, type, callback) => target.addEventListener(type, callback, { signal: controller.signal });
-  let pixels;
+  const samples = new WeakMap();
   let disposed = false;
   let directionsOpen = false;
-  function readMap() {
-    if (!map.naturalWidth) return;
+  function pixelsFor(map) {
+    if (samples.has(map)) return samples.get(map);
     const sample = document.createElement('canvas');
     sample.width = map.naturalWidth;
     sample.height = map.naturalHeight;
-    pixels = sample.getContext('2d', { willReadFrequently: true });
+    const pixels = sample.getContext('2d', { willReadFrequently: true });
     pixels.drawImage(map, 0, 0);
+    samples.set(map, pixels);
+    return pixels;
   }
   function positionLabels() {
     if (labels.hidden || disposed) return;
@@ -88,18 +89,17 @@ export function setupMapLabels(page, { visible = false, onChange = () => {} } = 
   }
   on(background, 'click', toggle);
   on(page, 'directions-open', event => { directionsOpen = event.detail; update(); });
-  on(map, 'load', readMap);
-  on(map, 'click', event => {
-    if (event.defaultPrevented || !pixels) return;
+  on(canvas, 'click', event => {
+    const map = event.target.closest('.map-image');
+    if (event.defaultPrevented || directionsOpen || !map?.naturalWidth) return;
     const bounds = map.getBoundingClientRect();
     const x = Math.max(0, Math.min(map.naturalWidth - 1, Math.floor((event.clientX - bounds.left) / bounds.width * map.naturalWidth)));
     const y = Math.max(0, Math.min(map.naturalHeight - 1, Math.floor((event.clientY - bounds.top) / bounds.height * map.naturalHeight)));
-    if (isMapPaper(pixels.getImageData(x, y, 1, 1).data)) toggle(event);
+    if (isMapPaper(pixelsFor(map).getImageData(x, y, 1, 1).data)) toggle(event);
   });
   const observer = new ResizeObserver(positionLabels);
   observer.observe(canvas);
   document.fonts.ready.then(() => { if (!disposed) positionLabels(); });
-  if (map.complete) readMap();
   update();
-  return () => { disposed = true; controller.abort(); observer.disconnect(); pixels = null; };
+  return () => { disposed = true; controller.abort(); observer.disconnect(); };
 }
