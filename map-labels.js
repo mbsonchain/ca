@@ -5,14 +5,15 @@ export function isMapPaper([red, green, blue, alpha]) {
 
 // Pixel adjustments on top of each printed town's standard label anchor.
 const offsets = {
-  orangepoint: { x: 13, y: -8 },
+  orangepoint: { x: 13, y: -5 },
+  freetown: { x: -3 },
   santamore: { x: -20 },
   'formal-city': { x: -4 },
   goldpoint: { x: -4 },
-  laketown: { x: -5, y: -9 },
+  laketown: { x: -2, y: -6 },
   clifftown: { y: -3 },
   hollywood: { side: 'left' },
-  sfida: { side: 'above', y: -14 },
+  sfida: { side: 'above', y: -11 },
 };
 
 export function setupCardDismissal(card, close, root = document) {

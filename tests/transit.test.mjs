@@ -141,6 +141,8 @@ test('the transit map draws only the rail and ferry network, its status and town
   assert.equal((transit.match(/class="network ferry"/g) || []).length, 4);
   assert.equal((transit.match(/class="network in-progress"/g) || []).length, 3);
   assert.equal((transit.match(/class="transit-town/g) || []).length, 20);
+  assert.equal((transit.match(/class="transit-town(?: station)?" r="7"/g) || []).length, 19);
+  assert.equal((transit.match(/class="transit-town(?: station)?" r="13"/g) || []).length, 1);
   assert.doesNotMatch(transit, /closed-mark|route-line road/);
   const road = mapOverlay('road', '', '', [], []);
   assert.match(road, /closed-mark/);

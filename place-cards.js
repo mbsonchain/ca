@@ -55,7 +55,7 @@ export function setupCards(main, getContent, directions) {
     card.style.top = `${Math.max(margin, Math.min(innerHeight - h - margin, top))}px`;
   }
   function show(button, pin = false) {
-    if (directions?.isChoosing()) return;
+    if (directions?.isOpen()) return false;
     cancelClose();
     pinned = active === button ? pinned || pin : pin;
     if (active !== button) {
@@ -79,6 +79,7 @@ export function setupCards(main, getContent, directions) {
     button.setAttribute('aria-expanded', 'true');
     card.hidden = false;
     position();
+    return true;
   }
   function refreshStation() {
     if (!active || !directions) return;
@@ -88,14 +89,17 @@ export function setupCards(main, getContent, directions) {
   directions?.onRefresh(refreshStation);
   card.addEventListener('toggle', position, { capture: true, signal: controller.signal });
   main.querySelectorAll('.hotspot').forEach(button => {
-    on(button, 'pointerenter', event => { if (event.pointerType === 'mouse' && !pinned) show(button); });
+    // A layout change under a stationary pointer should never open a preview.
+    on(button, 'pointermove', event => {
+      if (event.pointerType !== 'mouse' || pinned) return;
+      if (active === button) cancelClose();
+      else show(button);
+    });
     on(button, 'pointerleave', event => { if (event.pointerType === 'mouse') scheduleClose(); });
     on(button, 'focus', () => { if (!suppressedFocus) show(button); });
     on(button, 'blur', scheduleClose);
     on(button, 'click', event => {
-      directions?.prepareCard();
-      show(button, true);
-      if (event.detail === 0) card.querySelector('.card-directions').focus();
+      if (show(button, true) && event.detail === 0) card.querySelector('.card-directions').focus();
     });
   });
   on(card, 'pointerenter', cancelClose);

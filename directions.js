@@ -28,7 +28,7 @@ export function directionsControls() {
     <section class="trip-sheet" aria-label="Directions" hidden>
       <div class="sheet-bar"><button type="button" class="sheet-handle" aria-expanded="true" aria-controls="trip-body"><span>Directions</span><i aria-hidden="true"></i></button>
         <button type="button" class="sheet-close" aria-label="Close directions">×</button></div>
-      <div id="trip-body">${field('from')}${field('to')}<div class="trip-result" aria-live="polite"></div></div>
+      <div id="trip-body"><div class="trip-endpoints">${field('from')}${field('to')}</div><div class="trip-result" aria-live="polite"></div></div>
     </section>`;
 }
 
@@ -55,6 +55,7 @@ export function setupDirections(page) {
   const handle = sheet.querySelector('.sheet-handle'), result = sheet.querySelector('.trip-result');
   const overlay = page.querySelector('.route-overlay'), key = page.querySelector('.network-key');
   const controls = [...page.querySelectorAll('[data-mode]')];
+  const mapButtons = page.querySelectorAll('.hotspot, .guide-background');
   const pickers = Object.fromEntries([...sheet.querySelectorAll('[data-picker]')].map(button => [button.dataset.picker, button]));
   const lists = Object.fromEntries(Object.keys(pickers).map(k => [k, sheet.querySelector('#choices-' + k)]));
   const params = new URLSearchParams(location.search);
@@ -126,26 +127,30 @@ export function setupDirections(page) {
     pickers[k].focus({ preventScroll: true });
     save(); draw();
   }
+  function setOpen(open) {
+    sheet.hidden = !open;
+    for (const button of mapButtons) button.disabled = open;
+    page.dispatchEvent(new CustomEvent('directions-open', { detail: open }));
+  }
   function setExpanded(expanded) {
     body.hidden = !expanded;
     handle.setAttribute('aria-expanded', String(expanded));
     closeChoices();
-    page.dispatchEvent(new CustomEvent('directions-open', { detail: expanded }));
     if (expanded && (!selected.from || !selected.to)) showChoices(selected.from ? 'to' : 'from');
     draw();
   }
   function openTo(slug, focusMarker) {
+    if (!sheet.hidden) return;
     restoreFocus = focusMarker;
     selected.to = slug;
     for (const k of Object.keys(pickers)) syncField(k);
-    sheet.hidden = false;
+    setOpen(true);
     save(); setExpanded(true);
     (listKey ? pickers[listKey] : handle).focus({ preventScroll: true });
   }
   function closeSheet() {
     closeChoices();
-    page.dispatchEvent(new CustomEvent('directions-open', { detail: false }));
-    sheet.hidden = true;
+    setOpen(false);
     selected.from = ''; selected.to = '';
     for (const k of Object.keys(pickers)) syncField(k);
     save(); draw();
@@ -157,7 +162,39 @@ export function setupDirections(page) {
     mode = button.dataset.mode;
     save(); draw();
   });
-  on(handle, 'click', () => setExpanded(body.hidden));
+  let dragStart, skipHandleClick = false;
+  function resetDrag() {
+    dragStart = null;
+    sheet.style.removeProperty('--sheet-drag');
+    sheet.classList.remove('is-dragging');
+  }
+  on(handle, 'pointerdown', event => {
+    if (!event.isPrimary || event.button !== 0) return;
+    skipHandleClick = false;
+    dragStart = { id: event.pointerId, y: event.clientY };
+    handle.setPointerCapture(event.pointerId);
+  });
+  on(handle, 'pointermove', event => {
+    if (dragStart?.id !== event.pointerId) return;
+    const dy = event.clientY - dragStart.y;
+    if (dy > 4) sheet.classList.add('is-dragging');
+    sheet.style.setProperty('--sheet-drag', Math.max(0, dy) + 'px');
+  });
+  on(handle, 'pointerup', event => {
+    if (dragStart?.id !== event.pointerId) return;
+    const dy = event.clientY - dragStart.y;
+    resetDrag();
+    if (Math.abs(dy) < 36) return;
+    skipHandleClick = true;
+    if (dy > 0 && body.hidden) closeSheet();
+    else if (dy > 0 || body.hidden) setExpanded(dy < 0);
+  });
+  on(handle, 'lostpointercapture', resetDrag);
+  on(handle, 'pointercancel', resetDrag);
+  on(handle, 'click', event => {
+    if (!skipHandleClick || event.detail === 0) setExpanded(body.hidden);
+    skipHandleClick = false;
+  });
   on(sheet.querySelector('.sheet-close'), 'click', closeSheet);
   for (const [k, picker] of Object.entries(pickers)) {
     for (const row of lists[k].children) row.id = 'choice-' + k + '-' + row.dataset.index;
@@ -190,7 +227,7 @@ export function setupDirections(page) {
     if (listKey && !pickers[listKey].closest('.trip-field').contains(event.target)) closeChoices();
   });
   on(document, 'keydown', event => {
-    if (event.key === 'Escape' && !event.defaultPrevented && !sheet.hidden && !page.querySelector('.place-card:not([hidden])')) {
+    if (event.key === 'Escape' && !event.defaultPrevented && !sheet.hidden) {
       event.preventDefault(); closeSheet();
     }
   });
@@ -202,12 +239,10 @@ export function setupDirections(page) {
     timer = setTimeout(refresh, 60000 - Date.now() % 60000 + 20);
   }
   on(document, 'visibilitychange', () => { if (!document.hidden) refresh(); });
-  sheet.hidden = !selected.from && !selected.to;
-  if (!sheet.hidden) setExpanded(true);
+  if (selected.from || selected.to) { setOpen(true); setExpanded(true); }
   refresh();
   return {
-    openTo, isChoosing: () => Boolean(listKey),
-    prepareCard() { if (!sheet.hidden && !body.hidden) setExpanded(false); },
+    openTo, isOpen: () => !sheet.hidden,
     station: slug => stationInfo(slug, now),
     onRefresh: fn => on(page, 'timetable-update', fn),
     dispose() { clearTimeout(timer); controller.abort(); },
