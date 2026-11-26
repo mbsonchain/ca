@@ -3,6 +3,18 @@ export function isMapPaper([red, green, blue, alpha]) {
   return alpha === 0 || (red >= 243 && green >= 243 && blue >= 243);
 }
 
+// Pixel adjustments on top of each printed town's standard label anchor.
+const offsets = {
+  orangepoint: { x: 13, y: -8 },
+  santamore: { x: -20 },
+  'formal-city': { x: -4 },
+  goldpoint: { x: -4 },
+  laketown: { x: -5, y: -9 },
+  clifftown: { y: -3 },
+  hollywood: { side: 'left' },
+  sfida: { side: 'above', y: -14 },
+};
+
 export function setupCardDismissal(card, close, root = document) {
   const controller = new AbortController();
   const outside = target => !card.contains(target) && !target.closest('.hotspot');
@@ -35,7 +47,7 @@ export function setupMapLabels(page, { visible = false, onChange = () => {} } = 
   const on = (target, type, callback) => target.addEventListener(type, callback, { signal: controller.signal });
   let pixels;
   let disposed = false;
-  let picking = false;
+  let directionsOpen = false;
   function readMap() {
     if (!map.naturalWidth) return;
     const sample = document.createElement('canvas');
@@ -50,28 +62,31 @@ export function setupMapLabels(page, { visible = false, onChange = () => {} } = 
     labels.querySelectorAll('.map-label').forEach(label => {
       const width = label.offsetWidth;
       const anchor = Number(label.dataset.x) / 1024 * bounds.width;
-      const gap = label.dataset.label === 'santamore' ? -5 : 8;
-      let preferred = anchor + gap;
-      if (label.dataset.side === 'left') preferred = anchor - width - gap;
-      if (label.dataset.side === 'below') preferred = anchor - width / 2;
+      const offset = offsets[label.dataset.label] || {};
+      const side = offset.side || label.dataset.side;
+      const positions = { right: anchor + 8, left: anchor - width - 8, below: anchor - width / 2, above: anchor - width / 2 };
+      const preferred = positions[side] + (offset.x || 0);
+      if (offset.y) label.style.marginTop = offset.y + 'px';
+      if (side === 'above') label.style.transform = 'translateY(-100%)';
       // Keep names on screen even when their preferred side is outside the map.
-      const left = Math.max(8 - bounds.left, Math.min(innerWidth - 8 - bounds.left - width, preferred));
+      const rightMargin = label.dataset.label === 'orangepoint' ? 3 : 8;
+      const left = Math.max(8 - bounds.left, Math.min(innerWidth - rightMargin - bounds.left - width, preferred));
       label.style.left = `${left}px`;
     });
   }
   function update() {
-    labels.hidden = !(visible || picking);
+    labels.hidden = !(visible || directionsOpen);
     background.setAttribute('aria-pressed', String(!labels.hidden));
     positionLabels();
   }
   function toggle(event) {
-    if (event?.defaultPrevented || picking) return;
+    if (event?.defaultPrevented || directionsOpen) return;
     visible = !visible;
     update();
     onChange(visible);
   }
   on(background, 'click', toggle);
-  on(page, 'route-picking', event => { picking = event.detail; update(); });
+  on(page, 'directions-open', event => { directionsOpen = event.detail; update(); });
   on(map, 'load', readMap);
   on(map, 'click', event => {
     if (event.defaultPrevented || !pixels) return;

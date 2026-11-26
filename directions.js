@@ -7,14 +7,16 @@ import { escape } from './town-page.js';
 const ordered = [...towns].sort((a, b) => a.name.localeCompare(b.name));
 const ids = new Set(towns.map(town => town.slug));
 const prompts = { from: 'choose starting point', to: 'where to?' };
-const normalize = text => text.toLowerCase().replace(/[^a-z0-9]/g, '');
+const options = ordered.map((town, index) =>
+  `<li role="option" aria-selected="false" data-town="${town.slug}" data-index="${index}">${escape(town.name)}</li>`).join('');
 
 function field(key) {
   return `<div class="trip-field" data-field="${key}"><span class="field-dot" aria-hidden="true"></span>
-    <input role="combobox" name="${key}" autocomplete="off" autocapitalize="words" spellcheck="false"
-      aria-autocomplete="list" aria-controls="choices-${key}" aria-expanded="false" aria-label="${prompts[key]}" placeholder="${prompts[key]}">
+    <button type="button" role="combobox" class="town-picker" data-picker="${key}" aria-haspopup="listbox"
+      aria-controls="choices-${key}" aria-expanded="false" aria-label="${prompts[key]}">
+      <span class="picker-value">${prompts[key]}</span><i aria-hidden="true"></i></button>
     <button type="button" class="field-clear" data-clear="${key}" aria-label="Clear ${key === 'from' ? 'starting point' : 'destination'}" hidden>×</button>
-    <ul class="town-choices" role="listbox" aria-label="Town suggestions" id="choices-${key}" hidden></ul></div>`;
+    <ul class="town-choices" role="listbox" aria-label="${prompts[key]}" id="choices-${key}" hidden>${options}</ul></div>`;
 }
 
 export function directionsControls() {
@@ -53,23 +55,18 @@ export function setupDirections(page) {
   const handle = sheet.querySelector('.sheet-handle'), result = sheet.querySelector('.trip-result');
   const overlay = page.querySelector('.route-overlay'), key = page.querySelector('.network-key');
   const controls = [...page.querySelectorAll('[data-mode]')];
-  const inputs = Object.fromEntries([...sheet.querySelectorAll('input')].map(input => [input.name, input]));
-  const lists = Object.fromEntries([...sheet.querySelectorAll('[role=listbox]')].map(list => [list.closest('[data-field]').dataset.field, list]));
+  const pickers = Object.fromEntries([...sheet.querySelectorAll('[data-picker]')].map(button => [button.dataset.picker, button]));
+  const lists = Object.fromEntries(Object.keys(pickers).map(k => [k, sheet.querySelector('#choices-' + k)]));
   const params = new URLSearchParams(location.search);
   let mode = params.get('mode') === 'transit' ? 'transit' : 'road';
-  const selected = Object.fromEntries(Object.keys(inputs).map(k => [k, ids.has(params.get(k)) ? params.get(k) : '']));
+  const selected = Object.fromEntries(Object.keys(pickers).map(k => [k, ids.has(params.get(k)) ? params.get(k) : '']));
   const extra = new Set((params.get('closed') || '').split(',').filter(id => !postedClosures.has(id) && roads.some(edge => edge.id === id)));
   const controller = new AbortController();
   const showMap = setupMapArtwork(page.querySelector('.map-image'), controller.signal);
   const on = (el, type, callback) => el.addEventListener(type, callback, { signal: controller.signal });
-  let picking = '', listKey = '', options = [], highlight = -1, restoreFocus, timer;
+  let listKey = '', highlight = -1, restoreFocus, timer;
   let now = serviceTime();
 
-  function setPicking(k) {
-    if (picking === k) return;
-    picking = k;
-    page.dispatchEvent(new CustomEvent('route-picking', { detail: Boolean(k) }));
-  }
   function save() {
     const url = new URL(location.href);
     for (const [k, v] of Object.entries({ ...selected, mode: mode === 'transit' ? mode : '' })) {
@@ -90,58 +87,67 @@ export function setupDirections(page) {
     if (!sheet.hidden) updateMarkup(result, routeResult(from, to, mode, route, now, extra));
   }
   function closeChoices() {
-    if (listKey) {
-      lists[listKey].hidden = true;
-      inputs[listKey].setAttribute('aria-expanded', 'false');
-      inputs[listKey].removeAttribute('aria-activedescendant');
-    }
+    if (!listKey) return;
+    lists[listKey].hidden = true;
+    pickers[listKey].setAttribute('aria-expanded', 'false');
+    pickers[listKey].removeAttribute('aria-activedescendant');
+    if (highlight >= 0) lists[listKey].children[highlight].classList.remove('highlight');
     listKey = ''; highlight = -1;
+  }
+  function highlightOption(index) {
+    const rows = lists[listKey].children;
+    if (highlight >= 0) rows[highlight].classList.remove('highlight');
+    highlight = index;
+    if (index < 0) return;
+    const row = rows[index];
+    row.classList.add('highlight');
+    pickers[listKey].setAttribute('aria-activedescendant', row.id);
+    row.scrollIntoView({ block: 'nearest' });
   }
   function showChoices(k) {
     closeChoices();
     listKey = k;
-    const query = selected[k] ? '' : normalize(inputs[k].value);
-    options = ordered.filter(town => normalize(town.name).includes(query));
-    lists[k].innerHTML = options.map((t, i) => `<li id="choice-${k}-${i}" role="option" aria-selected="false" data-town="${t.slug}">${escape(t.name)}</li>`).join('') || '<li class="no-match" role="presentation">No matching town</li>';
     lists[k].hidden = false;
-    inputs[k].setAttribute('aria-expanded', 'true');
-    setPicking(k);
+    pickers[k].setAttribute('aria-expanded', 'true');
+    lists[k].scrollTop = 0;
+    highlightOption(ordered.findIndex(town => town.slug === selected[k]));
   }
   function syncField(k) {
-    inputs[k].value = names.get(selected[k]) || '';
-    sheet.querySelector('[data-clear="' + k + '"]').hidden = !inputs[k].value;
+    const text = names.get(selected[k]) || prompts[k];
+    pickers[k].querySelector('.picker-value').textContent = text;
+    pickers[k].setAttribute('aria-label', selected[k] ? prompts[k] + ', ' + text : prompts[k]);
+    for (const row of lists[k].children) row.setAttribute('aria-selected', String(row.dataset.town === selected[k]));
+    sheet.querySelector('[data-clear="' + k + '"]').hidden = !selected[k];
   }
   function choose(k, slug) {
     if (!ids.has(slug)) return;
     selected[k] = slug;
     syncField(k); closeChoices();
-    setPicking(!selected.from ? 'from' : !selected.to ? 'to' : '');
-    inputs[k].blur();
+    pickers[k].focus({ preventScroll: true });
     save(); draw();
   }
   function setExpanded(expanded) {
     body.hidden = !expanded;
     handle.setAttribute('aria-expanded', String(expanded));
     closeChoices();
-    setPicking(expanded ? (!selected.from ? 'from' : !selected.to ? 'to' : '') : '');
+    page.dispatchEvent(new CustomEvent('directions-open', { detail: expanded }));
+    if (expanded && (!selected.from || !selected.to)) showChoices(selected.from ? 'to' : 'from');
     draw();
   }
   function openTo(slug, focusMarker) {
     restoreFocus = focusMarker;
     selected.to = slug;
-    for (const k of Object.keys(inputs)) syncField(k);
+    for (const k of Object.keys(pickers)) syncField(k);
     sheet.hidden = false;
     save(); setExpanded(true);
-    if (window.matchMedia('(pointer: fine)').matches) {
-      const target = selected.from ? handle : inputs.from;
-      target.focus({ preventScroll: true });
-    }
+    (listKey ? pickers[listKey] : handle).focus({ preventScroll: true });
   }
   function closeSheet() {
-    closeChoices(); setPicking('');
+    closeChoices();
+    page.dispatchEvent(new CustomEvent('directions-open', { detail: false }));
     sheet.hidden = true;
     selected.from = ''; selected.to = '';
-    for (const k of Object.keys(inputs)) syncField(k);
+    for (const k of Object.keys(pickers)) syncField(k);
     save(); draw();
     if (restoreFocus) restoreFocus();
     else controls.find(button => button.dataset.mode === mode).focus({ preventScroll: true });
@@ -153,32 +159,20 @@ export function setupDirections(page) {
   });
   on(handle, 'click', () => setExpanded(body.hidden));
   on(sheet.querySelector('.sheet-close'), 'click', closeSheet);
-  for (const [k, input] of Object.entries(inputs)) {
+  for (const [k, picker] of Object.entries(pickers)) {
+    for (const row of lists[k].children) row.id = 'choice-' + k + '-' + row.dataset.index;
     syncField(k);
-    on(input, 'focus', () => { setPicking(k); if (selected[k]) input.select(); });
-    on(input, 'click', () => showChoices(k));
-    on(input, 'input', () => {
-      selected[k] = '';
-      sheet.querySelector('[data-clear="' + k + '"]').hidden = !input.value;
-      showChoices(k); save(); draw();
-    });
-    on(input, 'blur', closeChoices);
-    on(input, 'keydown', event => {
-      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    on(picker, 'click', () => { if (listKey === k) closeChoices(); else showChoices(k); });
+    on(picker, 'keydown', event => {
+      if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
         event.preventDefault();
         if (listKey !== k) showChoices(k);
-        if (!options.length) return;
-        highlight = event.key === 'ArrowDown' ? (highlight + 1) % options.length : (highlight <= 0 ? options.length - 1 : highlight - 1);
-        const rows = [...lists[k].querySelectorAll('[role=option]')];
-        rows.forEach((row, i) => row.setAttribute('aria-selected', String(i === highlight)));
-        input.setAttribute('aria-activedescendant', rows[highlight].id);
-        rows[highlight].scrollIntoView({ block: 'nearest' });
-      } else if (event.key === 'Enter') {
-        event.preventDefault();
-        if (listKey !== k) showChoices(k);
-        const town = options[highlight] || options.find(t => normalize(t.name) === normalize(input.value)) || options[0];
-        if (town) choose(k, town.slug);
-      } else if (event.key === 'Escape' && listKey) {
+        const last = ordered.length - 1;
+        const next = { ArrowDown: Math.min(highlight + 1, last), ArrowUp: highlight < 0 ? last : Math.max(highlight - 1, 0), Home: 0, End: last };
+        highlightOption(next[event.key]);
+      } else if (listKey === k && ['Enter', ' '].includes(event.key) && highlight >= 0) {
+        event.preventDefault(); choose(k, ordered[highlight].slug);
+      } else if (listKey === k && event.key === 'Escape') {
         event.preventDefault(); event.stopPropagation(); closeChoices();
       } else if (event.key === 'Tab') closeChoices();
     });
@@ -189,9 +183,12 @@ export function setupDirections(page) {
     });
     on(sheet.querySelector('[data-clear="' + k + '"]'), 'click', () => {
       selected[k] = ''; syncField(k); save(); draw();
-      input.focus({ preventScroll: true }); showChoices(k);
+      picker.focus({ preventScroll: true }); showChoices(k);
     });
   }
+  on(document, 'pointerdown', event => {
+    if (listKey && !pickers[listKey].closest('.trip-field').contains(event.target)) closeChoices();
+  });
   on(document, 'keydown', event => {
     if (event.key === 'Escape' && !event.defaultPrevented && !sheet.hidden && !page.querySelector('.place-card:not([hidden])')) {
       event.preventDefault(); closeSheet();
@@ -209,8 +206,7 @@ export function setupDirections(page) {
   if (!sheet.hidden) setExpanded(true);
   refresh();
   return {
-    openTo, isPicking: () => Boolean(picking),
-    pick(slug) { if (!picking) return false; choose(picking, slug); return true; },
+    openTo, isChoosing: () => Boolean(listKey),
     prepareCard() { if (!sheet.hidden && !body.hidden) setExpanded(false); },
     station: slug => stationInfo(slug, now),
     onRefresh: fn => on(page, 'timetable-update', fn),

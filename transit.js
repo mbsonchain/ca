@@ -10,9 +10,10 @@ export const lines = [
   rail('flowertown', 'hollywood', '245,929 262,958 277,972 294,1000 303,1036 321,1060 333,1071 337,1110 351,1143 350,1174 361,1202 355,1224'),
   rail('hollywood', 'santamore', '355,1224 373,1244 397,1255 421,1261 444,1281 460,1302 481,1315 516,1328 549,1333 577,1326 600,1325 628,1314 650,1314 665,1310'),
   rail('santamore', 'formal-city', '665,1310 658,1295 667,1268 667,1231 660,1201 647,1180 644,1159 632,1137 630,1114 628,1084'),
+  rail('freeport', 'freetown', '727,601 734,612 740,626 742,640 746,653 752,667 753,677 750,688 745,698 738,707'),
   rail('formal-city', 'hollywood', '628,1084 594,1095 565,1106 538,1105 513,1113 489,1132 463,1138 436,1158 414,1168 392,1186 373,1198 355,1224', 'in-progress'),
   rail('flowertown', 'formal-city', '245,929 278,946 306,958 332,983 364,1000 390,1028 416,1041 448,1044 477,1058 520,1068 552,1067 588,1080 628,1084', 'in-progress'),
-  rail('amoreport', 'camporella', '168,498 169,468 189,434 202,393 230,355 248,332 283,313 317,296 350,287 390,264 418,245 449,265 475,286 504,302 535,312 561,318 587,326', 'in-progress'),
+  rail('amoreport', 'camporella', '168,498 170,477 176,458 184,440 193,422 202,402 211,384 221,366 233,350 247,336 263,325 280,316 300,306 320,298 339,290 355,283 371,275 385,266 397,259 407,254 418,252 429,255 441,261 453,270 467,280 481,289 497,298 516,305 536,312 560,319 587,326', 'in-progress'),
   ...segments.filter(row => row[2] === 'ferry').map(([from, to, mode, , geometry]) => ({
     id: from + '~' + to, from, to, mode, geometry, status: 'running',
   })),
@@ -29,12 +30,13 @@ const stationDwell = 8;
 
 // Terminal departures repeat on the Pacific clock. Ride times are in-world estimates.
 const services = [
-  { stops: ['amoreport', 'us-city', 'flowertown', 'hollywood'], rides: [130, 230, 270], first: [330, 345], last: [1290, 1305], every: 60 },
-  { stops: ['hollywood', 'santamore', 'formal-city'], rides: [245, 200], first: [365, 355], last: [1325, 1315], every: 60 },
-  { stops: ['camporella', 'freeport'], rides: [315], first: [360, 410], last: [1170, 1220], every: 90 },
-  { stops: ['freetown', 'clifftown'], rides: [165], first: [345, 370], last: [1335, 1360], every: 45 },
-  { stops: ['freetown', 'sfida'], rides: [270], first: [380, 420], last: [1260, 1300], every: 80 },
-  { stops: ['goldpoint', 'greenpoint'], rides: [120], first: [390, 415], last: [1290, 1315], every: 45 },
+  { stops: ['amoreport', 'us-city', 'flowertown', 'hollywood'], rides: [200, 450, 510], first: [330, 345], last: [1290, 1305], every: 60 },
+  { stops: ['hollywood', 'santamore', 'formal-city'], rides: [365, 300], first: [365, 355], last: [1325, 1315], every: 60 },
+  { stops: ['freeport', 'freetown'], rides: [150], first: [360, 390], last: [1320, 1350], every: 120 },
+  { stops: ['camporella', 'freeport'], rides: [450], first: [360, 410], last: [1170, 1220], every: 90 },
+  { stops: ['freetown', 'clifftown'], rides: [245], first: [345, 370], last: [1335, 1360], every: 45 },
+  { stops: ['freetown', 'sfida'], rides: [360], first: [380, 420], last: [1260, 1300], every: 80 },
+  { stops: ['goldpoint', 'greenpoint'], rides: [180], first: [390, 415], last: [1290, 1315], every: 45 },
 ];
 
 const departures = new Map();

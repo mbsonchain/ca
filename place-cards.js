@@ -55,7 +55,7 @@ export function setupCards(main, getContent, directions) {
     card.style.top = `${Math.max(margin, Math.min(innerHeight - h - margin, top))}px`;
   }
   function show(button, pin = false) {
-    if (directions?.isPicking()) return;
+    if (directions?.isChoosing()) return;
     cancelClose();
     pinned = active === button ? pinned || pin : pin;
     if (active !== button) {
@@ -93,7 +93,6 @@ export function setupCards(main, getContent, directions) {
     on(button, 'focus', () => { if (!suppressedFocus) show(button); });
     on(button, 'blur', scheduleClose);
     on(button, 'click', event => {
-      if (directions?.pick(button.dataset.place)) { close(); return; }
       directions?.prepareCard();
       show(button, true);
       if (event.detail === 0) card.querySelector('.card-directions').focus();

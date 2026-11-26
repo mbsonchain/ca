@@ -49,7 +49,7 @@ function fixture(t) {
   Object.assign(globalThis, { document, window: new EventTarget(), innerWidth: 390, innerHeight: 844 });
   const navigations = [];
   const dispose = setupCards(main, () => ({ title: 'Freetown', eyebrow: 'the eastern island', intro: 'An island junction.', url: '/travel-guide/freetown', link: 'explore' }), {
-    isPicking: () => false, pick: () => false, prepareCard() {}, station: () => '', onRefresh() {},
+    isChoosing: () => false, prepareCard() {}, station: () => '', onRefresh() {},
     openTo: slug => navigations.push(slug),
   });
   t.after(dispose);
