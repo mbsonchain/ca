@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import { renderArticle } from '../article.js';
 import { interviewArticle } from '../collection.js';
 
-test('the standalone interview starts with its exchanges and ends with MAS, without a separate title or question highlights', () => {
+test('the standalone interview starts with its exchanges and ends with MS, without a separate title or question highlights', () => {
   const html = renderArticle(interviewArticle, { highlightQuestions: false });
   assert.doesNotMatch(html, /article-title|CONAMORE is a place|<h1[ >]/);
   assert.equal((html.match(/<h2 class="article-question">DF:/g) || []).length, 11);
   for (const block of interviewArticle.blocks) assert.doesNotMatch(block.question, /[\r\n]/);
   assert.equal((html.match(/Bernini/g) || []).length, 2);
-  assert.equal((html.match(/<p>MAS:/g) || []).length, 11);
-  assert.match(html, /<p>MAS: Everything\.<\/p><\/section><\/div>$/);
+  assert.equal((html.match(/<p>MS:/g) || []).length, 11);
+  assert.match(html, /<p>MS: Everything\.<\/p><\/section><\/div>$/);
   assert.doesNotMatch(html, /undefined|<mark>|article-byline/);
 });
 

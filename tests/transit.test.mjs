@@ -22,9 +22,9 @@ test('Flowertown to Hollywood is direct in both directions and through trains st
   assert.equal(planTrip('amoreport', 'us-city', 'transit', 330, ['amoreport~us-city']).status, 'ok');
 });
 
-test('the island shuttle is the only island train and the three construction lines have no departures', () => {
+test('the island shuttle is the only island train and construction lines have no departures', () => {
   const unfinished = lines.filter(e => e.status === 'in-progress');
-  assert.deepEqual(unfinished.map(e => e.id).sort(), ['amoreport~camporella', 'flowertown~formal-city', 'formal-city~hollywood']);
+  assert.deepEqual(unfinished.map(e => e.id).sort(), ['amoreport~camporella', 'flowertown~formal-city', 'formal-city~hollywood', 'formal-city~sfida']);
   for (const edge of unfinished) {
     assert.equal(nextTrip(edge.from, edge.to, 0), undefined);
     assert.equal(nextTrip(edge.to, edge.from, 0), undefined);
@@ -88,6 +88,8 @@ test('both posted breaks match the atlas and force real detours while roads stay
 test('station boards and direction notices distinguish completed and planned service', () => {
   const now = { minute: 700, day: 'Thu, Nov 26' };
   assert.match(stationInfo('formal-city', now), /Train to Hollywood · In progress/);
+  assert.match(stationInfo('formal-city', now), /Train to Sfida · In progress/);
+  assert.match(stationInfo('sfida', now), /Train to Formal City · In progress/);
   assert.match(stationInfo('formal-city', now), /Train to Hollywood via Sant’Amore/);
   assert.match(stationInfo('camporella', now), /Next ferry/);
   assert.match(stationInfo('camporella', { minute: 1439, day: 'Thu, Nov 26' }), /Service finished for today/);
@@ -96,6 +98,11 @@ test('station boards and direction notices distinguish completed and planned ser
   const view = routeResult('formal-city', 'hollywood', 'transit', r, now, []);
   assert.match(view, /Direct train · In progress/);
   assert.match(view, /Sant’Amore/);
+  for (const [from, to] of [['formal-city', 'sfida'], ['sfida', 'formal-city']]) {
+    const route = planTrip(from, to, 'transit', now.minute);
+    assert.equal(route.status, 'unconnected');
+    assert.match(routeResult(from, to, 'transit', route, now, []), /Direct train · In progress/);
+  }
 });
 
 test('the eastern ferry and the desert road give the atlas its long-distance times', () => {
@@ -140,7 +147,7 @@ test('the transit map draws only the rail and ferry network, its status and town
   const transit = mapOverlay('transit', '', '', [], []);
   assert.equal((transit.match(/class="network train"/g) || []).length, 6);
   assert.equal((transit.match(/class="network ferry"/g) || []).length, 4);
-  assert.equal((transit.match(/class="network in-progress"/g) || []).length, 3);
+  assert.equal((transit.match(/class="network in-progress"/g) || []).length, 4);
   assert.equal((transit.match(/class="transit-town/g) || []).length, 20);
   assert.equal((transit.match(/class="transit-town(?: station)?" r="7"/g) || []).length, 19);
   assert.equal((transit.match(/class="transit-town(?: station)?" r="13"/g) || []).length, 1);
