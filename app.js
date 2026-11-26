@@ -3,26 +3,21 @@ import { collectionIntroduction, interviewArticle, interviewPath } from './colle
 import { renderArticle } from './article.js';
 import { setupMapLabels } from './map-labels.js';
 import { setupCards } from './place-cards.js';
-import { startCountdown } from './countdown.js';
+import { homeClock, startCountdown } from './countdown.js';
+import { bar, bySlug, escape, mapImage, placeUrl, renderTown } from './town-page.js';
 import { directionsControls, setupDirections } from './directions.js';
 import { lockMapGestures } from './map-gestures.js';
 
 const main = document.querySelector('#main');
-const bySlug = new Map(places.map(place => [place.slug, place]));
-const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const placeUrl = place => `/travel-guide/${place.slug}`;
-const mapImage = '/assets/conamore-map.png';
 let cleanup = () => {};
 
 function mapLabel(place) {
-  const left = ['amoretown', 'orangepoint', 'freetown', 'open-city'].includes(place.slug);
-  const name = ['freetown-formal', 'island-formal', 'sunset-cliffs'].includes(place.slug) ? escape(place.name).replace(' ', '<br>') : escape(place.name);
-  const drop = { laketown: 6, santamore: 9, amoretown: -9 }[place.slug] || 0;
-  return `<span class="map-label" data-label="${place.slug}" data-x="${place.x}" data-side="${left ? 'left' : 'right'}" style="top:calc(${place.y / 1536 * 100}% + ${drop}px)">${name}</span>`;
-}
-
-function bar({ home = false } = {}) {
-  return `<header class="page-bar${home ? ' home-bar' : ''}"><nav aria-label="Site navigation"><a href="/"${home ? ' aria-current="page"' : ''}>home</a><a href="https://desertformal.com">FORMAL</a><a href="https://strikeout.us">strikeout</a></nav></header>`;
+  const left = ['amoretown', 'flowertown', 'open-city'].includes(place.slug);
+  const below = ['sfida', 'orangepoint', 'clifftown'].includes(place.slug);
+  const side = below ? 'below' : left ? 'left' : 'right';
+  const dy = below ? 7 : ({ laketown: 6, santamore: 10, amoretown: -9, greenpoint: -8 }[place.slug] || 0);
+  const name = escape(place.name).replace('Sunset Cliffs', 'Sunset<br>Cliffs');
+  return `<span class="map-label" data-label="${place.slug}" data-x="${place.x}" data-side="${side}" style="top:calc(${place.y / 1536 * 100}% + ${dy}px)">${name}</span>`;
 }
 
 function flowers() {
@@ -91,13 +86,18 @@ function desktopFlowerColumn() {
 function render({ focus = false } = {}) {
   cleanup();
   cleanup = () => {};
-  const path = location.pathname.replace(/\/$/, '') || '/';
+  const path = location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
   document.body.classList.toggle('fixed-map-page', ['/', '/travel-guide'].includes(path));
   document.body.classList.toggle('collection-page', path === '/visit-conamore' || path === interviewPath);
   document.body.classList.toggle('collection-landing-page', path === '/visit-conamore');
   let section = '';
   if (path === '/') {
     document.title = 'CONAMORE';
+    const footer = document.querySelector('.site-footer');
+    if (!footer.querySelector('.site-countdown')) footer.insertAdjacentHTML('afterbegin', homeClock);
+    const clock = footer.querySelector('.site-countdown');
+    const stopClock = startCountdown(clock);
+    cleanup = () => { stopClock(); clock.remove(); };
     main.innerHTML = `${bar({ home: true })}<section class="home"><a class="home-map-link" href="/travel-guide" aria-label="Explore the CONAMORE travel guide"><img class="home-map" src="${mapImage}" width="1024" height="1536" alt="The map of CONAMORE, with green hills, mountain roads, blue lakes and a golden desert." fetchpriority="high"></a><h1 class="wordmark"><a href="/travel-guide">CONAMORE</a></h1></section>`;
   } else if (path === '/travel-guide') {
     section = 'guide';
@@ -111,7 +111,7 @@ function render({ focus = false } = {}) {
           <img class="map-image" src="${mapImage}" width="1024" height="1536" alt="CONAMORE travel map. Hover, focus or tap a location to find out more.">
           <svg class="route-overlay" viewBox="0 0 1024 1536" aria-hidden="true"></svg>
           ${places.filter(p => !p.area).map(p => `<button class="hotspot" style="--x:${p.x / 1024 * 100}%;--y:${p.y / 1536 * 100}%" data-place="${p.slug}" aria-label="${escape(p.name)}" aria-expanded="false" aria-controls="place-card"></button>`).join('')}
-          <div id="map-labels" class="map-labels" aria-hidden="true" hidden>${places.map(mapLabel).join('')}</div>
+          <div id="map-labels" class="map-labels" aria-hidden="true" hidden>${places.filter(p => !p.area).map(mapLabel).join('')}</div>
         </div>
       </section></div>`;
     const guide = main.querySelector('.guide-page');
@@ -119,21 +119,14 @@ function render({ focus = false } = {}) {
     const directions = setupDirections(guide);
     const cleanCards = setupCards(main, button => {
       const p = bySlug.get(button.dataset.place);
-      return { title: p.name, intro: p.intro, eyebrow: p.region, url: placeUrl(p), link: 'explore this place →' };
-    }, navigate, directions);
+      return { title: p.name, intro: p.intro, eyebrow: p.region, url: placeUrl(p) };
+    }, directions);
     cleanup = () => { cleanCards(); cleanLabels(); directions.dispose(); };
   } else if (path.startsWith('/travel-guide/') && bySlug.has(path.split('/')[2]) && path.split('/').length === 3) {
     section = 'guide';
     const place = bySlug.get(path.split('/')[2]);
     document.title = `${place.name} — CONAMORE`;
-    main.innerHTML = `${bar()}<a class="map-back" href="/travel-guide">← travel guide</a>
-      <article class="detail">
-        <div class="map-crop" style="--crop-x:${place.x / 1024 * 100}%;--crop-y:${place.y / 1536 * 100}%"><img src="${mapImage}" width="1024" height="1536" alt="${escape(place.name)} and its surroundings on the CONAMORE map"></div>
-        <div class="detail-copy"><p class="eyebrow">${escape(place.region)}</p><h1>${escape(place.name)}</h1><p>${escape(place.detail)}</p>
-          ${place.area ? '' : `<a class="detail-directions" href="/travel-guide?to=${place.slug}">directions here</a>`}
-          <nav class="nearby" aria-label="Keep exploring"><h2>keep exploring</h2>${place.nearby.map(slug => `<a href="${placeUrl(bySlug.get(slug))}">${escape(bySlug.get(slug).name)} →</a>`).join('')}</nav>
-        </div>
-      </article>`;
+    if (main.dataset.place !== place.slug) main.innerHTML = renderTown(place);
   } else if (path === '/visit-conamore') {
     section = 'collection';
     document.title = 'Visit CONAMORE';
@@ -160,6 +153,7 @@ function render({ focus = false } = {}) {
     document.title = 'Not found — CONAMORE';
     main.innerHTML = `${bar()}<section class="not-found"><h1>off the map.</h1><p><a href="/travel-guide">back to the travel guide →</a></p></section>`;
   }
+  main.removeAttribute('data-place');
   if (path === '/visit-conamore') cleanup = setupCollectionFlowers(main.querySelector('.collection'));
   document.querySelectorAll('[data-nav]').forEach(a => {
     if (a.dataset.nav === section) a.setAttribute('aria-current', 'page');
@@ -188,5 +182,4 @@ window.addEventListener('popstate', () => {
 });
 history.scrollRestoration = 'manual';
 lockMapGestures(document);
-startCountdown(document.querySelector('.site-countdown'));
 render();

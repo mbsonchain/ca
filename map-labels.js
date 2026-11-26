@@ -50,8 +50,10 @@ export function setupMapLabels(page, { visible = false, onChange = () => {} } = 
     labels.querySelectorAll('.map-label').forEach(label => {
       const width = label.offsetWidth;
       const anchor = Number(label.dataset.x) / 1024 * bounds.width;
-      const gap = label.dataset.label === 'santamore' ? 1 : 8;
-      const preferred = label.dataset.side === 'left' ? anchor - width - gap : anchor + gap;
+      const gap = label.dataset.label === 'santamore' ? -5 : 8;
+      let preferred = anchor + gap;
+      if (label.dataset.side === 'left') preferred = anchor - width - gap;
+      if (label.dataset.side === 'below') preferred = anchor - width / 2;
       // Keep names on screen even when their preferred side is outside the map.
       const left = Math.max(8 - bounds.left, Math.min(innerWidth - 8 - bounds.left - width, preferred));
       label.style.left = `${left}px`;
