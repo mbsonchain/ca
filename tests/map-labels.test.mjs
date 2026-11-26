@@ -26,7 +26,8 @@ function fixture(t, viewport = 1000) {
   let disconnected = false;
   globalThis.ResizeObserver = class { observe() {} disconnect() { disconnected = true; } };
   const changes = [];
-  const dispose = setupMapLabels({ querySelector: selector => selectors[selector] }, { onChange: value => changes.push(value) });
+  const page = Object.assign(new EventTarget(), { querySelector: selector => selectors[selector] });
+  const dispose = setupMapLabels(page, { onChange: value => changes.push(value) });
   t.after(dispose);
   function clickMap(color) {
     pixel = color;
@@ -59,7 +60,7 @@ test('background activates names; white pixels toggle them; terrain leaves them 
   assert.deepEqual(f.changes, [true, false, true]);
 });
 
-test('Orangepoint is left and Freetown Formal is right; narrow screens retain both names', t => {
+test('western and eastern labels stay on screen on narrow maps', t => {
   const f = fixture(t, 390);
   f.background.dispatchEvent(new Event('click'));
   for (const label of f.names) {
