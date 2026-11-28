@@ -14,11 +14,19 @@ test('towns and both interview URLs are static documents, and only home shows th
   for (const html of [home, guide]) {
     assert.match(html, /class="map-canvas"/);
     assert.equal((html.match(/class="map-image"/g) || []).length, 2);
-    assert.match(html, /class="map-layer transit-layer" hidden/);
   }
+  assert.match(home, /data-artwork="home"/);
+  assert.match(home, /src="\/assets\/conamore-transit-terrain\.webp"[^>]*fetchpriority="high"/);
+  const dotLayer = home.match(/<svg class="home-dots"[^>]*>(.*?)<\/svg>/s)[1];
+  const towns = places.filter(p => !p.area);
+  assert.equal((dotLayer.match(/<circle /g) || []).length, towns.length);
+  assert.doesNotMatch(dotLayer, /<(?:polyline|line|path|text)\b/);
+  for (const { x, y } of towns) assert.ok(dotLayer.includes(`cx="${x}" cy="${y}"`));
+  assert.match(guide, /data-artwork="road"/);
+  assert.match(guide, /src="\/assets\/conamore-map\.png"[^>]*fetchpriority="high"/);
   assert.doesNotMatch(home, /class="hotspot"|class="trip-sheet"/);
   assert.match(guide, /class="guide-background"/);
-  for (const place of places.filter(p => !p.area)) {
+  for (const place of towns) {
     const html = await read('travel-guide/' + place.slug);
     assert.ok(html.includes('<h1>' + place.name + '</h1>'));
     assert.ok(html.includes(place.detail));

@@ -35,12 +35,11 @@ export function setupMapArtwork(page) {
   const layers = { road: page.querySelector('.road-layer'), transit: page.querySelector('.transit-layer') };
   const controller = new AbortController();
   const ready = new Set();
-  let requested = 'road';
+  let requested = page.dataset.artwork;
 
   function reveal(mode) {
     if (controller.signal.aborted || mode !== requested) return;
-    layers[mode].hidden = false;
-    layers[mode === 'road' ? 'transit' : 'road'].hidden = true;
+    page.dataset.artwork = mode;
   }
 
   for (const [mode, layer] of Object.entries(layers)) {
@@ -63,7 +62,7 @@ export function setupMapArtwork(page) {
     layers,
     show(mode) {
       requested = mode;
-      if (ready.has(mode)) reveal(mode);
+      if (mode === 'home' || ready.has(mode)) reveal(mode);
     },
     dispose() { controller.abort(); },
   };
