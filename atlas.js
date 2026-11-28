@@ -40,11 +40,11 @@ export function renderAtlas(home) {
     <div class="atlas-tools">${home ? '' : guideTools}</div>
     <section class="map-stage" aria-label="Explore the places of CONAMORE">
       <div class="map-canvas">
-        <div class="map-layer road-layer">
+        <div class="map-layer road-layer"${home ? ' hidden' : ''}>
           <img class="map-image" src="${mapImage}" width="1024" height="1536" alt="${roadDescription}" fetchpriority="${home ? 'low' : 'high'}">
           <svg class="route-overlay" viewBox="0 0 1024 1536" aria-hidden="true"></svg>
         </div>
-        <div class="map-layer transit-layer">
+        <div class="map-layer transit-layer"${home ? '' : ' hidden'}>
           <img class="map-image" src="/assets/conamore-transit-terrain.webp" width="1024" height="1536" alt="${home ? homeDescription : transitDescription}" fetchpriority="${home ? 'high' : 'low'}">
           <svg class="home-dots" viewBox="0 0 1024 1536" aria-hidden="true">${homeDots}</svg>
           <svg class="route-overlay" viewBox="0 0 1024 1536" aria-hidden="true"></svg>
