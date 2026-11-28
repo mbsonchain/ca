@@ -16,6 +16,8 @@ test('towns and both interview URLs are static documents, and only home shows th
     assert.equal((html.match(/class="map-image"/g) || []).length, 2);
   }
   assert.match(home, /data-artwork="home"/);
+  assert.match(home, /class="map-layer road-layer" hidden>/);
+  assert.match(home, /class="map-layer transit-layer">/);
   assert.match(home, /src="\/assets\/conamore-transit-terrain\.webp"[^>]*fetchpriority="high"/);
   const dotLayer = home.match(/<svg class="home-dots"[^>]*>(.*?)<\/svg>/s)[1];
   const towns = places.filter(p => !p.area);
@@ -23,6 +25,8 @@ test('towns and both interview URLs are static documents, and only home shows th
   assert.doesNotMatch(dotLayer, /<(?:polyline|line|path|text)\b/);
   for (const { x, y } of towns) assert.ok(dotLayer.includes(`cx="${x}" cy="${y}"`));
   assert.match(guide, /data-artwork="road"/);
+  assert.match(guide, /class="map-layer road-layer">/);
+  assert.match(guide, /class="map-layer transit-layer" hidden>/);
   assert.match(guide, /src="\/assets\/conamore-map\.png"[^>]*fetchpriority="high"/);
   assert.doesNotMatch(home, /class="hotspot"|class="trip-sheet"/);
   assert.match(guide, /class="guide-background"/);

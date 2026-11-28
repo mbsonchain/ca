@@ -177,8 +177,10 @@ test('the homepage stays road-free and pending decodes only reveal the requested
   road.decoded();
   await Promise.resolve();
   assert.equal(page.dataset.artwork, 'home');
+  assert.deepEqual([road.hidden, transit.hidden], [true, false]);
   atlas.show('road');
   assert.equal(page.dataset.artwork, 'road');
+  assert.deepEqual([road.hidden, transit.hidden], [false, true]);
   atlas.show('transit');
   transit.load();
   assert.equal(page.dataset.artwork, 'road');
@@ -188,6 +190,7 @@ test('the homepage stays road-free and pending decodes only reveal the requested
   assert.equal(page.dataset.artwork, 'road');
   atlas.show('transit');
   assert.equal(page.dataset.artwork, 'transit');
+  assert.deepEqual([road.hidden, transit.hidden], [true, false]);
   atlas.show('home');
   assert.equal(page.dataset.artwork, 'home');
   atlas.show('road');

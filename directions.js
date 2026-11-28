@@ -40,6 +40,8 @@ export function setupMapArtwork(page) {
   function reveal(mode) {
     if (controller.signal.aborted || mode !== requested) return;
     page.dataset.artwork = mode;
+    layers.road.hidden = mode !== 'road';
+    layers.transit.hidden = mode === 'road';
   }
 
   for (const [mode, layer] of Object.entries(layers)) {
