@@ -1,4 +1,4 @@
-import { places } from './places.js';
+import { towns } from './routes.js';
 import { bar, escape, mapImage } from './town-page.js';
 import { directionsControls } from './directions.js';
 
@@ -23,27 +23,30 @@ function flowers() {
   </div>`;
 }
 
-const homeDescription = 'The map of CONAMORE, with green hills, mountain roads, blue lakes and a golden desert.';
+const homeDescription = 'The terrain of CONAMORE, with a dot for each town.';
 const roadDescription = 'CONAMORE road map. Choose a town to explore or get directions.';
+const transitDescription = 'CONAMORE rail and ferry map. Choose a town for departures and directions.';
+const homeDots = towns.map(town => `<circle cx="${town.x}" cy="${town.y}" r="7"/>`).join('');
 const homeActions = `<a class="home-map-link" href="/travel-guide" aria-label="Explore the CONAMORE travel guide"></a>
   <h1 class="wordmark"><a href="/travel-guide">CONAMORE</a></h1>`;
 const guideTools = `<h1 class="sr-only">travel guide</h1>
   <button class="guide-background" aria-label="Show place names" aria-pressed="false" aria-controls="map-labels"></button>
   ${flowers()}${directionsControls()}`;
-const guideActions = `${places.filter(p => !p.area).map(p => `<button class="hotspot" style="--x:${p.x / 1024 * 100}%;--y:${p.y / 1536 * 100}%" data-place="${p.slug}" aria-label="${escape(p.name)}" aria-expanded="false" aria-controls="place-card"></button>`).join('')}
-          <div id="map-labels" class="map-labels" aria-hidden="true" hidden>${places.filter(p => !p.area).map(mapLabel).join('')}</div>`;
+const guideActions = `${towns.map(p => `<button class="hotspot" style="--x:${p.x / 1024 * 100}%;--y:${p.y / 1536 * 100}%" data-place="${p.slug}" aria-label="${escape(p.name)}" aria-expanded="false" aria-controls="place-card"></button>`).join('')}
+          <div id="map-labels" class="map-labels" aria-hidden="true" hidden>${towns.map(mapLabel).join('')}</div>`;
 
 export function renderAtlas(home) {
-  return `${bar({ home })}<div class="atlas-page ${home ? 'home' : 'guide-page'}">
+  return `${bar({ home })}<div class="atlas-page ${home ? 'home' : 'guide-page'}" data-artwork="${home ? 'home' : 'road'}">
     <div class="atlas-tools">${home ? '' : guideTools}</div>
     <section class="map-stage" aria-label="Explore the places of CONAMORE">
       <div class="map-canvas">
         <div class="map-layer road-layer">
-          <img class="map-image" src="${mapImage}" width="1024" height="1536" alt="${home ? homeDescription : roadDescription}" fetchpriority="high">
+          <img class="map-image" src="${mapImage}" width="1024" height="1536" alt="${roadDescription}" fetchpriority="${home ? 'low' : 'high'}">
           <svg class="route-overlay" viewBox="0 0 1024 1536" aria-hidden="true"></svg>
         </div>
-        <div class="map-layer transit-layer" hidden>
-          <img class="map-image" src="/assets/conamore-transit-terrain.webp" width="1024" height="1536" alt="CONAMORE rail and ferry map. Choose a town for departures and directions." fetchpriority="low">
+        <div class="map-layer transit-layer">
+          <img class="map-image" src="/assets/conamore-transit-terrain.webp" width="1024" height="1536" alt="${home ? homeDescription : transitDescription}" fetchpriority="${home ? 'high' : 'low'}">
+          <svg class="home-dots" viewBox="0 0 1024 1536" aria-hidden="true">${homeDots}</svg>
           <svg class="route-overlay" viewBox="0 0 1024 1536" aria-hidden="true"></svg>
         </div>
         <div class="atlas-actions">${home ? homeActions : guideActions}</div>
@@ -63,7 +66,7 @@ export function mountAtlas(main, home) {
     page.className = 'atlas-page ' + view;
     page.querySelector('.atlas-tools').innerHTML = home ? '' : guideTools;
     page.querySelector('.atlas-actions').innerHTML = home ? homeActions : guideActions;
-    page.querySelector('.road-layer img').alt = home ? homeDescription : roadDescription;
+    page.querySelector('.transit-layer img').alt = home ? homeDescription : transitDescription;
     const homeLink = main.querySelector('.page-bar a[href="/"]');
     if (home) homeLink.setAttribute('aria-current', 'page');
     else homeLink.removeAttribute('aria-current');

@@ -24,7 +24,7 @@ function render({ focus = false } = {}) {
   document.body.classList.toggle('collection-page', isInterview);
   let section = '';
   if (home) {
-    artwork.show('road');
+    artwork.show('home');
     document.title = 'CONAMORE';
     const footer = document.querySelector('.site-footer');
     if (!footer.querySelector('.site-countdown')) footer.insertAdjacentHTML('afterbegin', homeClock);
